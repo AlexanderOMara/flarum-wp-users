@@ -1,0 +1,51 @@
+#!/bin/bash
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# Install variables.
+install_envs=(
+	WORDPRESS_DB_HOST
+	WORDPRESS_DB_USER
+	WORDPRESS_DB_PASS
+	WORDPRESS_DB_NAME
+	WORDPRESS_DB_PREFIX
+	WORDPRESS_INSTALL_URL
+	WORDPRESS_INSTALL_TITLE
+	WORDPRESS_INSTALL_ADMIN_USER
+	WORDPRESS_INSTALL_ADMIN_EMAIL
+	WORDPRESS_INSTALL_ADMIN_PASS
+	FLARUM_DB_HOST
+	FLARUM_DB_USER
+	FLARUM_DB_PASS
+	FLARUM_DB_NAME
+	FLARUM_DB_PREFIX
+	FLARUM_INSTALL_TITLE
+	FLARUM_INSTALL_ADMIN_USER
+	FLARUM_INSTALL_ADMIN_EMAIL
+	FLARUM_INSTALL_ADMIN_PASS
+)
+
+# Check if variables set.
+install_envs_set='1'
+for e in "${install_envs[@]}"; do
+	if [[ -z "${!e}" ]]; then
+		echo "Missing environment variable: ${e}"
+		install_envs_set='0'
+	fi
+done
+if [[ "${install_envs_set}" != '1' ]]; then
+	echo 'Missing required environment variables, install aborted.'
+	exit 1
+fi
+
+# Run the www-data entrypoint.
+sudo -u www-data -E entrypoint-www-data
+
+# Clear install environment variables.
+for e in "${install_envs[@]}"; do
+	unset "${e}"
+done
+
+# Run the apache entrypoint.
+exec apache2-foreground "$@"

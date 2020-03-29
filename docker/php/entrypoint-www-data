@@ -1,0 +1,176 @@
+#!/bin/bash
+set -o errexit
+set -o nounset
+set -o pipefail
+
+wordpress_version='5.3.2'
+flarum_version='v0.1.0-beta.12'
+flarum_dir='forum'
+
+export FLARUM_INSTALL_URL="${WORDPRESS_INSTALL_URL}/${flarum_dir}"
+flarum_config_json='/tmp/flarum.json'
+
+# Wait for and optionally create a MySQL table.
+wait_for_mysql() {
+	TERM=dumb php -- "$1" "$2" "$3" "${4:-}" \
+<<'EOF'
+<?php
+list($host, $socket) = explode(':', $argv[1], 2);
+$port = is_numeric($socket) ? (int)$socket : 0;
+$socket = $port ? null : $socket;
+$user = $argv[2];
+$pass = $argv[3];
+$table = $argv[4];
+$tries = 10;
+do {
+	echo 'Checking for MySQL connection...', "\n";
+	$mysql = new mysqli($host, $user, $pass, '', $port, $socket);
+	if ($mysql->connect_error) {
+		if (--$tries <= 0) {
+			exit(1);
+		}
+		sleep(3);
+	}
+}
+while ($mysql->connect_error);
+if (!empty($table)) {
+	$table_esc = $mysql->real_escape_string($table);
+	if (!$mysql->query("CREATE DATABASE IF NOT EXISTS `{$table_esc}`")) {
+		echo $mysql->error, "\n";
+		$mysql->close();
+		exit(1);
+	}
+}
+$mysql->close();
+EOF
+}
+
+# Download WordPress if not yet downloaded.
+if [[ ! -f wp-load.php ]]; then
+	echo 'Downloading WordPress: Starting'
+
+	wp core download \
+		--version="${wordpress_version}"
+
+	echo 'Downloading WordPress: Complete'
+fi
+
+# Create WordPress config if not created.
+if [[ ! -f wp-config.php ]]; then
+	echo 'Installing WordPress: Starting'
+
+	wp config create \
+		--dbhost="${WORDPRESS_DB_HOST}" \
+		--dbuser="${WORDPRESS_DB_USER}" \
+		--dbpass="${WORDPRESS_DB_PASS}" \
+		--dbname="${WORDPRESS_DB_NAME}" \
+		--dbprefix="${WORDPRESS_DB_PREFIX}" \
+		--skip-check \
+		--extra-php <<'EOF'
+define('WP_DEBUG', filter_var($_ENV['WORDPRESS_CFG_WP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));
+define('WP_DEBUG_LOG', filter_var($_ENV['WORDPRESS_CFG_DEBUG_LOG'] ?? false, FILTER_VALIDATE_BOOLEAN));
+define('SCRIPT_DEBUG', filter_var($_ENV['WORDPRESS_CFG_SCRIPT_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));
+define('AUTOMATIC_UPDATER_DISABLED', filter_var($_ENV['WORDPRESS_CFG_AUTOMATIC_UPDATER_DISABLED'] ?? false, FILTER_VALIDATE_BOOLEAN));
+
+if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+	define('WP_DEBUG_DISPLAY', false);
+	@ini_set('display_errors', 0);
+}
+EOF
+
+	# Wait for the DB host to be ready.
+	wait_for_mysql \
+		"${WORDPRESS_DB_HOST}" \
+		"${WORDPRESS_DB_USER}" \
+		"${WORDPRESS_DB_PASS}"
+
+	# Create database if necessary and install.
+	wp db create || true
+	wp core install \
+		--url="${WORDPRESS_INSTALL_URL}" \
+		--title="${WORDPRESS_INSTALL_TITLE}" \
+		--admin_user="${WORDPRESS_INSTALL_ADMIN_USER}" \
+		--admin_email="${WORDPRESS_INSTALL_ADMIN_EMAIL}" \
+		--admin_password="${WORDPRESS_INSTALL_ADMIN_PASS}" \
+		--skip-email
+
+	echo 'Installing WordPress: Complete'
+fi
+
+# Install Flarum if not yet installed.
+if [[ ! -d "${flarum_dir}" ]]; then
+	echo 'Installing Flarum: Starting'
+
+	# Download Flarum.
+	composer create-project \
+		--stability=beta \
+		flarum/flarum \
+		"${flarum_dir}" \
+		"${flarum_version}"
+	pushd "${flarum_dir}" > /dev/null
+	chmod +x flarum
+
+	# Remove public directory from directory structure.
+	pushd public > /dev/null
+	for f in {.*,*}; do
+		if [[ "${f}" == '.' || "${f}" == '..' ]]; then
+			continue
+		fi
+		mv "${f}" "../${f}"
+	done
+	popd > /dev/null
+	rmdir public
+	sed -i "s/\/public//g" site.php
+	sed -i "s/\.\.\/site\.php/\.\/site\.php/g" index.php
+	sed -i "s/# RewriteRule /RewriteRule /g" .htaccess
+
+	# Wait for the DB host to be ready, and ensure table exists.
+	wait_for_mysql \
+		"${FLARUM_DB_HOST}" \
+		"${FLARUM_DB_USER}" \
+		"${FLARUM_DB_PASS}" \
+		"${FLARUM_DB_NAME}"
+
+	# Create the install config, run install, cleanup config.
+	TERM=dumb php -- "${flarum_config_json}" \
+<<'EOF'
+<?php
+list($host, $socket) = explode(':', $_ENV['FLARUM_DB_HOST'], 2);
+$port = is_numeric($socket) ? (int)$socket : 0;
+file_put_contents($argv[1], json_encode([
+	'debug' => false,
+	'baseUrl' => $_ENV['FLARUM_INSTALL_URL'],
+	'databaseConfiguration' => [
+		'driver' => 'mysql',
+		'host' => $host,
+		'port' => $port ? $port : 3306,
+		'database' => $_ENV['FLARUM_DB_NAME'],
+		'username' => $_ENV['FLARUM_DB_USER'],
+		'password' => $_ENV['FLARUM_DB_PASS'],
+		'prefix' => $_ENV['FLARUM_DB_PREFIX']
+	],
+	'adminUser' => [
+		'username' => $_ENV['FLARUM_INSTALL_ADMIN_USER'],
+		'password' => $_ENV['FLARUM_INSTALL_ADMIN_PASS'],
+		'email' => $_ENV['FLARUM_INSTALL_ADMIN_EMAIL']
+	],
+	'settings' => [
+		'forum_title' => $_ENV['FLARUM_INSTALL_TITLE']
+	]
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+EOF
+	./flarum install -f "${flarum_config_json}"
+	rm "${flarum_config_json}"
+
+	# Make config use ENV for debug.
+	sed -i \
+		"s/'debug' => false/'debug' => filter_var\(\$_ENV\[\'FLARUM_CFG_DEBUG\'\] \?\? false, FILTER_VALIDATE_BOOLEAN\)/g" \
+		'config.php'
+
+	# Install package.
+	composer config repositories.0 path '/flarum-packages/*'
+	composer require 'alexanderomara/flarum-wp-users' '*@dev'
+
+	popd > /dev/null
+	echo 'Installing Flarum: Complete'
+fi

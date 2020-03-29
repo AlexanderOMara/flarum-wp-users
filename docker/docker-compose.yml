@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+
+  php:
+    build:
+      context: php
+    ports:
+    - '80:80'
+    - '443:443'
+    networks:
+    - webnet
+    volumes:
+    - ./vol/htdocs:/var/www/html
+    - ..:/flarum-packages/flarum-wp-users
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASS: toor
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_PREFIX: wppre_
+      WORDPRESS_INSTALL_URL: 'https://flarum-wp-users.localhost'
+      WORDPRESS_INSTALL_TITLE: 'Test WordPress Site'
+      WORDPRESS_INSTALL_ADMIN_USER: admin
+      WORDPRESS_INSTALL_ADMIN_EMAIL: admin@example.com
+      WORDPRESS_INSTALL_ADMIN_PASS: nimda
+      WORDPRESS_CFG_WP_DEBUG: 1
+      WORDPRESS_CFG_DEBUG_LOG: 1
+      WORDPRESS_CFG_SCRIPT_DEBUG: 1
+      WORDPRESS_CFG_AUTOMATIC_UPDATER_DISABLED: 1
+      FLARUM_DB_HOST: mysql
+      FLARUM_DB_USER: root
+      FLARUM_DB_PASS: toor
+      FLARUM_DB_NAME: flarum
+      FLARUM_DB_PREFIX: flpre_
+      FLARUM_INSTALL_TITLE: 'Test Flarum Site'
+      FLARUM_INSTALL_ADMIN_USER: admin
+      FLARUM_INSTALL_ADMIN_EMAIL: admin@example.com
+      FLARUM_INSTALL_ADMIN_PASS: nimda
+      FLARUM_CFG_DEBUG: 1
+
+  mysql:
+    image: mysql:5.7
+    ports:
+    - '3306:3306'
+    networks:
+    - webnet
+    volumes:
+    - ./vol/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+
+networks:
+  webnet:

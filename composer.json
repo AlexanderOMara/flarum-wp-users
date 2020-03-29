@@ -1,0 +1,47 @@
+{
+	"name": "alexanderomara/flarum-wp-users",
+	"description": "Flarum WP Users: Use WordPress for user accounts and authentication",
+	"keywords": [
+		"flarum",
+		"wordpress",
+		"authentication",
+		"user",
+		"account",
+		"integration",
+		"sso"
+	],
+	"homepage": "https://github.com/AlexanderOMara/flarum-wp-users",
+	"support": {
+		"source": "https://github.com/AlexanderOMara/flarum-wp-users",
+		"issues": "https://github.com/AlexanderOMara/flarum-wp-users/issues"
+	},
+	"license": "MPL-2.0",
+	"type": "flarum-extension",
+	"require": {
+		"flarum/core": ">=v0.1.0-beta.12"
+	},
+	"autoload": {
+		"psr-4": {
+			"AlexanderOMara\\FlarumWPUsers\\": "src/"
+		}
+	},
+	"extra": {
+		"flarum-extension": {
+			"title": "WP Users",
+			"icon": {
+				"name": "fab fa-wordpress-simple",
+				"backgroundColor": "#23282d",
+				"color": "#d7dade"
+			}
+		}
+	},
+	"archive": {
+		"exclude": [
+			".*",
+			"/scripts",
+			"/docker",
+			"/js",
+			"!/js/dist"
+		]
+	}
+}
