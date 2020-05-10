@@ -22,22 +22,22 @@ class Authenticate implements Middleware {
 	/**
 	 * Events object.
 	 */
-	protected EventsDispatcher $events;
+	protected /*EventsDispatcher*/ $events;
 
 	/**
 	 * Authenticator object.
 	 */
-	protected SessionAuthenticator $authenticator;
+	protected /*SessionAuthenticator*/ $authenticator;
 
 	/**
 	 * Settings object.
 	 */
-	protected SettingsRepositoryInterface $settings;
+	protected /*SettingsRepositoryInterface*/ $settings;
 
 	/**
 	 * LoggedOut user.
 	 */
-	protected ?User $loggedOut = null;
+	protected /*?User*/ $loggedOut = null;
 
 	/**
 	 * Authentication middleware.

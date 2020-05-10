@@ -11,22 +11,22 @@ class Nonce {
 	/**
 	 * Nonce key.
 	 */
-	protected string $nonceKey;
+	protected /*string*/ $nonceKey;
 
 	/**
 	 * Nonce salt.
 	 */
-	protected string $nonceSalt;
+	protected /*string*/ $nonceSalt;
 
 	/**
 	 * User ID.
 	 */
-	protected ?string $userID;
+	protected /*?string*/ $userID;
 
 	/**
 	 * Session cookie.
 	 */
-	protected ?string $cookie;
+	protected /*?string*/ $cookie;
 
 	/**
 	 * WordPress nonce class.

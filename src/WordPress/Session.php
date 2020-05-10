@@ -12,17 +12,17 @@ class Session {
 	/**
 	 * Database connection.
 	 */
-	protected Db $db;
+	protected /*Db*/ $db;
 
 	/**
 	 * Logged in key.
 	 */
-	protected string $loggedInKey;
+	protected /*string*/ $loggedInKey;
 
 	/**
 	 * Logged in salt.
 	 */
-	protected string $loggedInSalt;
+	protected /*string*/ $loggedInSalt;
 
 	/**
 	 * WordPress session lookup class.

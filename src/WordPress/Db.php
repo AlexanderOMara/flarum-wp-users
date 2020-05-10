@@ -11,7 +11,7 @@ class Db extends PDO {
 	/**
 	 * Table prefix.
 	 */
-	public string $prefix;
+	public /*string*/ $prefix;
 
 	/**
 	 * WordPress database class.

@@ -19,12 +19,12 @@ class Intercept implements Middleware {
 	/**
 	 * Route object.
 	 */
-	protected RouteHandlerFactory $route;
+	protected /*RouteHandlerFactory*/ $route;
 
 	/**
 	 * Dispatcher object.
 	 */
-	protected ?Dispatcher $dispatcher = null;
+	protected /*?Dispatcher*/ $dispatcher = null;
 
 	/**
 	 * Intercept middleware.

@@ -15,7 +15,7 @@ class AddData {
 	/**
 	 * Settings object.
 	 */
-	protected SettingsRepositoryInterface $settings;
+	protected /*SettingsRepositoryInterface*/ $settings;
 
 	/**
 	 * Data hook.
