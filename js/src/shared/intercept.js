@@ -1,15 +1,20 @@
-import app from 'flarum/app';
+import ModalManager from 'flarum/components/ModalManager';
+import LogInModal from 'flarum/components/LogInModal';
 
 import {matches} from './dom';
-import {data, queryAdd} from './util';
+import {data, queryAdd, methodOverride} from './util';
 
 function redirectThrough(url) {
 	return url ? queryAdd(url, 'redirect_to', location.href) : url;
 }
 
-function eventHandler(e) {
+function bypass() {
 	// Add #localuser to URL to bypass the hijacking.
-	if (/#localuser$/i.test(location.href)) {
+	return /#localuser$/i.test(location.href);
+}
+
+function eventHandler(e) {
+	if (bypass()) {
 		return;
 	}
 
@@ -44,4 +49,17 @@ function eventHandler(e) {
 
 export function intercept() {
 	window.addEventListener('click', eventHandler, true);
+
+	// Hijack the method that shows the login modal.
+	methodOverride(ModalManager.prototype, 'show', show => {
+		return function(modal) {
+			if (!bypass()) {
+				if (modal instanceof LogInModal) {
+					location.href = redirectThrough(data().loginUrl);
+					return;
+				}
+			}
+			return show.apply(this, arguments);
+		};
+	});
 }

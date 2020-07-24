@@ -10,3 +10,13 @@ export function queryAdd(url, key, value) {
 	parts[0] += `${c}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
 	return parts.join('#');
 }
+
+export function methodOverride(object, method, replacement) {
+	const desc = Object.getOwnPropertyDescriptor(object, method);
+	const {value} = desc;
+	if (typeof value !== 'function') {
+		throw new Error(`Method is not a function: ${method}`);
+	}
+	desc.value = replacement(value);
+	Object.defineProperty(object, method, desc);
+}
