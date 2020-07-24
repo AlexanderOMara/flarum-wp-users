@@ -3,7 +3,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-wordpress_version='5.4.1'
+wordpress_version='5.4.2'
 flarum_version='v0.1.0-beta.13'
 flarum_dir='forum'
 

@@ -36,7 +36,7 @@ RUN apt-get update && \
 	chmod +x /usr/local/bin/wp && \
 	curl -L -s \
 		-o /usr/local/bin/composer \
-		https://getcomposer.org/download/1.10.6/composer.phar \
+		https://getcomposer.org/download/1.10.9/composer.phar \
 	&& \
 	chmod +x /usr/local/bin/composer
 
