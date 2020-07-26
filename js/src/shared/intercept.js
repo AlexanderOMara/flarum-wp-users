@@ -53,8 +53,8 @@ export function intercept() {
 	// Hijack the method that shows the login modal.
 	methodOverride(ModalManager.prototype, 'show', show => {
 		return function(modal) {
-			if (!bypass()) {
-				if (modal instanceof LogInModal) {
+			if (modal && !bypass()) {
+				if (LogInModal && modal instanceof LogInModal) {
 					location.href = redirectThrough(data().loginUrl);
 					return;
 				}
