@@ -18,11 +18,15 @@ use AlexanderOMara\FlarumWPUsers\Response\NullResponse;
 class Intercept implements Middleware {
 	/**
 	 * Route object.
+	 *
+	 * @var RouteHandlerFactory
 	 */
 	protected /*RouteHandlerFactory*/ $route;
 
 	/**
 	 * Dispatcher object.
+	 *
+	 * @var Dispatcher|null
 	 */
 	protected /*?Dispatcher*/ $dispatcher = null;
 

@@ -10,21 +10,29 @@ use AlexanderOMara\FlarumWPUsers\WordPress\Util;
 class Nonce {
 	/**
 	 * Nonce key.
+	 *
+	 * @var string
 	 */
 	protected /*string*/ $nonceKey;
 
 	/**
 	 * Nonce salt.
+	 *
+	 * @var string
 	 */
 	protected /*string*/ $nonceSalt;
 
 	/**
 	 * User ID.
+	 *
+	 * @var string|null
 	 */
 	protected /*?string*/ $userID;
 
 	/**
 	 * Session cookie.
+	 *
+	 * @var string|null
 	 */
 	protected /*?string*/ $cookie;
 

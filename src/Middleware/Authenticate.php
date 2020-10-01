@@ -22,26 +22,36 @@ use AlexanderOMara\FlarumWPUsers\Core;
 class Authenticate implements Middleware {
 	/**
 	 * Events object.
+	 *
+	 * @var EventsDispatcher
 	 */
 	protected /*EventsDispatcher*/ $events;
 
 	/**
 	 * Authenticator object.
+	 *
+	 * @var SessionAuthenticator
 	 */
 	protected /*SessionAuthenticator*/ $authenticator;
 
 	/**
 	 * Settings object.
+	 *
+	 * @var SettingsRepositoryInterface
 	 */
 	protected /*SettingsRepositoryInterface*/ $settings;
 
 	/**
 	 * UrlGenerator object.
+	 *
+	 * @var UrlGenerator
 	 */
 	protected /*UrlGenerator*/ $url;
 
 	/**
 	 * LoggedOut user.
+	 *
+	 * @var User|null
 	 */
 	protected /*?User*/ $loggedOut = null;
 

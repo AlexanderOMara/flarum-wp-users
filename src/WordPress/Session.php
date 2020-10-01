@@ -11,16 +11,22 @@ use AlexanderOMara\FlarumWPUsers\WordPress\Util;
 class Session {
 	/**
 	 * Database connection.
+	 *
+	 * @var Db
 	 */
 	protected /*Db*/ $db;
 
 	/**
 	 * Logged in key.
+	 *
+	 * @var string
 	 */
 	protected /*string*/ $loggedInKey;
 
 	/**
 	 * Logged in salt.
+	 *
+	 * @var string
 	 */
 	protected /*string*/ $loggedInSalt;
 

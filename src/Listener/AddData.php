@@ -14,6 +14,8 @@ use AlexanderOMara\FlarumWPUsers\Core;
 class AddData {
 	/**
 	 * Settings object.
+	 *
+	 * @var SettingsRepositoryInterface
 	 */
 	protected /*SettingsRepositoryInterface*/ $settings;
 

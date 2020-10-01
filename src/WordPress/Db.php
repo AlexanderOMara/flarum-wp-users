@@ -10,6 +10,8 @@ use PDO;
 class Db extends PDO {
 	/**
 	 * Table prefix.
+	 *
+	 * @var string
 	 */
 	public /*string*/ $prefix;
 
