@@ -17,11 +17,15 @@ use AlexanderOMara\FlarumWPUsers\WordPress;
 class Core {
 	/**
 	 * Extension identifier.
+	 *
+	 * @var string
 	 */
 	public const ID = 'alexanderomara-wp-users';
 
 	/**
 	 * User property mappings with conflict fallback sprintf format.
+	 *
+	 * @var array
 	 */
 	protected static $userMap = [
 		'username' => [
