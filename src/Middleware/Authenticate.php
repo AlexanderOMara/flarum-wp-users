@@ -3,6 +3,7 @@
 namespace AlexanderOMara\FlarumWPUsers\Middleware;
 
 use Flarum\Http\SessionAuthenticator;
+use Flarum\Http\UrlGenerator;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\LoggedOut;
 use Flarum\User\User;
@@ -35,6 +36,11 @@ class Authenticate implements Middleware {
 	protected /*SettingsRepositoryInterface*/ $settings;
 
 	/**
+	 * UrlGenerator object.
+	 */
+	protected /*UrlGenerator*/ $url;
+
+	/**
 	 * LoggedOut user.
 	 */
 	protected /*?User*/ $loggedOut = null;
@@ -45,15 +51,18 @@ class Authenticate implements Middleware {
 	 * @param EventsDispatcher $events Events dispatcher.
 	 * @param SessionAuthenticator $authenticator Authenticator object.
 	 * @param SettingsRepositoryInterface $settings Settings object.
+	 * @param UrlGenerator $url URL object.
 	 */
 	public function __construct(
 		EventsDispatcher $events,
 		SessionAuthenticator $authenticator,
-		SettingsRepositoryInterface $settings
+		SettingsRepositoryInterface $settings,
+		UrlGenerator $url
 	) {
 		$this->events = $events;
 		$this->authenticator = $authenticator;
 		$this->settings = $settings;
+		$this->url = $url;
 	}
 
 	/**
@@ -140,6 +149,13 @@ class Authenticate implements Middleware {
 		// Find location to go after logout (redirect or same location).
 		$destination = $response->getHeader('location')[0] ??
 			$request->getUri()->__toString();
+
+		// If redirecting to forum, make sure slash included.
+		// This avoids an extra redirect hop.
+		$forumUrlGen = $this->url->to('forum');
+		if ($destination === $forumUrlGen->base()) {
+			$destination = $forumUrlGen->path('');
+		}
 
 		// Get the logout URL if configured, else no way to intercept it.
 		$logoutUrl = Core::getLogoutUrl(
