@@ -7,7 +7,5 @@ import {WPUsersSettingsModal} from './components/WPUsersSettingsModal';
 app.initializers.add(ID, () => {
 	intercept();
 
-	app.extensionSettings[ID] = () => app.modal.show(
-		new WPUsersSettingsModal()
-	);
+	app.extensionSettings[ID] = () => app.modal.show(WPUsersSettingsModal);
 });

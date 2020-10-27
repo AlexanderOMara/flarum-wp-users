@@ -3,8 +3,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-wordpress_version='5.4.2'
-flarum_version='v0.1.0-beta.13'
+wordpress_version='5.5.1'
+flarum_version='v0.1.0-beta.14'
 flarum_dir='forum'
 
 export FLARUM_INSTALL_URL="${WORDPRESS_INSTALL_URL}/${flarum_dir}"

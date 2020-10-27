@@ -1,7 +1,9 @@
-import ModalManager from 'flarum/components/ModalManager';
+import app from 'flarum/app';
 import LogInModal from 'flarum/components/LogInModal';
+import SignUpModal from 'flarum/components/SignUpModal';
+import ChangeEmailModal from 'flarum/components/ChangeEmailModal';
+import ChangePasswordModal from 'flarum/components/ChangePasswordModal';
 
-import {matches} from './dom';
 import {data, queryAdd, methodOverride} from './util';
 
 function redirectThrough(url) {
@@ -13,51 +15,36 @@ function bypass() {
 	return /#localuser$/i.test(location.href);
 }
 
-function eventHandler(e) {
-	if (bypass()) {
-		return;
-	}
-
-	let redirect = null;
-	const {target} = e;
-	if (matches(target, '.item-logIn *')) {
-		redirect = redirectThrough(data().loginUrl);
-	}
-	else if (matches(target, '.item-signUp *')) {
-		redirect = redirectThrough(data().registerUrl);
-	}
-	else if (matches(target, '.item-changePassword *')) {
-		const {allowedChanges} = data();
-		if (allowedChanges && !allowedChanges.password) {
-			redirect = data().profileUrl;
+function shouldRedirect(componentClass) {
+	switch (componentClass) {
+		case LogInModal: {
+			return redirectThrough(data().loginUrl);
+		}
+		case SignUpModal: {
+			return redirectThrough(data().registerUrl);
+		}
+		case ChangeEmailModal: {
+			return data().allowedChanges?.email ?
+				null :
+				data().profileUrl;
+		}
+		case ChangePasswordModal: {
+			return data().allowedChanges?.password ?
+				null :
+				data().profileUrl;
 		}
 	}
-	else if (matches(target, '.item-changeEmail *')) {
-		const {allowedChanges} = data();
-		if (allowedChanges && !allowedChanges.email) {
-			redirect = data().profileUrl;
-		}
-	}
-
-	if (redirect) {
-		e.preventDefault();
-		e.stopPropagation();
-		e.stopImmediatePropagation();
-		location.href = redirect;
-	}
+	return null;
 }
 
 export function intercept() {
-	window.addEventListener('click', eventHandler, true);
-
-	// Hijack the method that shows the login modal.
-	methodOverride(ModalManager.prototype, 'show', show => {
-		return function(modal) {
-			if (modal && !bypass()) {
-				if (LogInModal && modal instanceof LogInModal) {
-					location.href = redirectThrough(data().loginUrl);
-					return;
-				}
+	// Hijack the method that shows the different modals to redirect.
+	methodOverride(app.modal, 'show', show => {
+		return function(componentClass, _attrs) {
+			const redirect = bypass() ? null : shouldRedirect(componentClass);
+			if (redirect) {
+				location.href = redirect;
+				return;
 			}
 			return show.apply(this, arguments);
 		};
