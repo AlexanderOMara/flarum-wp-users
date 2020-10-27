@@ -6,7 +6,6 @@ use Illuminate\Contracts\Events\Dispatcher;
 
 use AlexanderOMara\FlarumWPUsers\Listener;
 use AlexanderOMara\FlarumWPUsers\Middleware;
-use AlexanderOMara\FlarumWPUsers\Compat\Extend as CompatExtend;
 
 return [
 	// Client-side code.
@@ -18,18 +17,18 @@ return [
 		->content(Listener\AddData::class),
 
 	// Middleware.
-	(new CompatExtend\Middleware('forum'))
+	(new Extend\Middleware('forum'))
 		->insertAfter(
 			HttpMiddleware\AuthenticateWithSession::class,
 			Middleware\Authenticate::class
 		)
 		->add(Middleware\InterceptForum::class),
-	(new CompatExtend\Middleware('admin'))
+	(new Extend\Middleware('admin'))
 		->insertAfter(
 			HttpMiddleware\AuthenticateWithSession::class,
 			Middleware\Authenticate::class
 		),
-	(new CompatExtend\Middleware('api'))
+	(new Extend\Middleware('api'))
 		->insertAfter(
 			HttpMiddleware\AuthenticateWithHeader::class,
 			Middleware\Authenticate::class
