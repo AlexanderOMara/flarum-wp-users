@@ -2,7 +2,6 @@
 
 namespace AlexanderOMara\FlarumWPUsers\Listener;
 
-use Flarum\User\AssertPermissionTrait;
 use Flarum\User\Event\Saving;
 use Illuminate\Contracts\Events\Dispatcher;
 
@@ -12,8 +11,6 @@ use AlexanderOMara\FlarumWPUsers\Core;
  * User Saving event hook.
  */
 class AddUserSaving {
-	use AssertPermissionTrait;
-
 	/**
 	 * Subscribe handler.
 	 *
@@ -46,7 +43,7 @@ class AddUserSaving {
 	protected function onSavingRegistering(Saving $event): void {
 		// Only an admin may register accounts bypassing extension.
 		// What RegisterUserHandler would do if allow_sign_up is false.
-		$this->assertAdmin($event->actor);
+		$event->actor->assertCan('administrate');
 	}
 
 	/**
@@ -58,7 +55,7 @@ class AddUserSaving {
 		// A managed user should not have their managed properties edited.
 		// Only an admin may change those managed properties.
 		if (!Core::allowedChangeCheck($event->user)) {
-			$this->assertAdmin($event->actor);
+			$event->actor->assertCan('administrate');
 		}
 	}
 }
