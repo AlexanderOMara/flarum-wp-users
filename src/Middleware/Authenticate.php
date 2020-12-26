@@ -244,7 +244,7 @@ class Authenticate implements Middleware {
 	}
 
 	/**
-	 * Check if a request has expiration grade period.
+	 * Check if a request has expiration grace period.
 	 *
 	 * @param Request $request Request object.
 	 * @return bool True of request should have the grace period.
