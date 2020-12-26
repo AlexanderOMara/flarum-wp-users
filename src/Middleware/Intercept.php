@@ -77,7 +77,7 @@ class Intercept implements Middleware {
 		if ($routeInfo[0] === Dispatcher::FOUND) {
 			$handler = $routeInfo[1];
 			$parameters = $routeInfo[2];
-			$response = $handler($request, $parameters);
+			$response = $handler['handler']($request, $parameters);
 		}
 
 		// If a null response, return null.
