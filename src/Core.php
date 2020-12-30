@@ -25,20 +25,23 @@ class Core {
 	/**
 	 * User property mappings with conflict fallback sprintf format.
 	 *
-	 * @var array
+	 * @param SettingsRepositoryInterface $settings Settings object.
+	 * @return array
 	 */
-	protected static $userMap = [
-		'username' => [
-			'key' => 'user_login',
-			'setter' => 'rename',
-			'conflict' => 'user-%s-%s'
-		],
-		'email' => [
-			'key' => 'user_email',
-			'setter' => 'changeEmail',
-			'conflict' => 'user-%s-%s@0.0.0.0'
-		]
-	];
+	protected static function userMap(
+		SettingsRepositoryInterface $settings
+	): array {
+		return ['username' => [
+					'key' => static::getUsernameColumn($settings), // default: user_login
+					'setter' => 'rename',
+					'conflict' => 'user-%s-%s'
+				],
+				'email' => [
+					'key' => 'user_email',
+					'setter' => 'changeEmail',
+					'conflict' => 'user-%s-%s@0.0.0.0'
+				]];
+	} 
 
 	/**
 	 * Generate unique ID with 128 strong pseudo-random bits.
@@ -118,6 +121,19 @@ class Core {
 		else {
 			$session->put(static::sessionUserIdKey(), $id);
 		}
+	}
+
+	/**
+	 * Get username column from the settings.
+	 *
+	 * @param SettingsRepositoryInterface $settings Settings object.
+	 * @return string username column if configured, defaults to user_login.
+	 */
+	public static function getUsernameColumn(
+		SettingsRepositoryInterface $settings
+	): string {
+		$col = static::setting($settings, 'username_col');
+		return $col ?? 'user_login';
 	}
 
 	/**
@@ -312,9 +328,10 @@ class Core {
 	 * If new user cannot be created, null is returned.
 	 *
 	 * @param array $wpUser WordPress user.
+	 * @param SettingsRepositoryInterface $settings Settings object.
 	 * @return User|null Flarum user.
 	 */
-	public static function ensureUser(array $wpUser): ?User {
+	public static function ensureUser(array $wpUser, SettingsRepositoryInterface $settings): ?User {
 		// Lookup managed user if already exists.
 		$user = LoginProvider::logIn(static::ID, $wpUser['ID']);
 
@@ -322,7 +339,7 @@ class Core {
 		if (!$user) {
 			// If a match and unmanaged make it so and continue with it.
 			$userSameEmail = User::where([
-				'email' => $wpUser[static::$userMap['email']['key']]
+				'email' => $wpUser[static::userMap($settings)['email']['key']]
 			])->first();
 			if ($userSameEmail && !static::userManagedHas($userSameEmail)) {
 				static::userManagedCreate($userSameEmail, $wpUser['ID']);
@@ -332,7 +349,7 @@ class Core {
 
 		// Before updating or creating user ensure unique properties.
 		// Change any dupes to keep the unique table column integrity.
-		foreach (static::$userMap as $k=>$v) {
+		foreach (static::userMap($settings) as $k=>$v) {
 			$value = $wpUser[$v['key']];
 
 			// If user already exists and property is unchanged, skip check.
@@ -362,7 +379,7 @@ class Core {
 		// If user exists, check for changes, and save if different.
 		if ($user) {
 			$changed = false;
-			foreach (static::$userMap as $k=>$v) {
+			foreach (static::userMap($settings) as $k=>$v) {
 				if ($user->{$k} !== $wpUser[$v['key']]) {
 					$user->{$v['setter']}($wpUser[$v['key']]);
 					$changed = true;
@@ -378,8 +395,8 @@ class Core {
 		// An empty password is an invalid hash and will not match.
 		// Therefore all logins for that user must go through this extension.
 		$user = User::register(
-			$wpUser[static::$userMap['username']['key']],
-			$wpUser[static::$userMap['email']['key']],
+			$wpUser[static::userMap($settings)['username']['key']],
+			$wpUser[static::userMap($settings)['email']['key']],
 			''
 		);
 		$user->activate();

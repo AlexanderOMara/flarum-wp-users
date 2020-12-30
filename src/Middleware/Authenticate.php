@@ -205,7 +205,7 @@ class Authenticate implements Middleware {
 		}
 
 		// Get the Flarum user for the WP user if possible.
-		$actor = Core::ensureUser($wpUser);
+		$actor = Core::ensureUser($wpUser, $this->settings);
 
 		// Update the last seen time on the actor if exists.
 		// Based on AuthenticateWithSession->getActor().

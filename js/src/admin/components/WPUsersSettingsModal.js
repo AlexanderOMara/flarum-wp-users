@@ -1,4 +1,5 @@
 import SettingsModal from 'flarum/components/SettingsModal';
+import Select from 'flarum/components/Select';
 
 import {ID} from '../../config';
 
@@ -34,7 +35,19 @@ export class WPUsersSettingsModal extends SettingsModal {
 			option('logged_in_key', 'Logged In Key', 'LOGGED_IN_KEY'),
 			option('logged_in_salt', 'Logged In Salt', 'LOGGED_IN_SALT'),
 			option('nonce_key', 'Nonce Key', 'NONCE_KEY'),
-			option('nonce_salt', 'Nonce Salt', 'NONCE_SALT')
+			option('nonce_salt', 'Nonce Salt', 'NONCE_SALT'),
+			m('.Form-group', [
+				<label>Get Username from (<i>Column Name of Wordpress users Table for Username mapping</i>)</label>,
+                Select.component({
+                    options: {
+                        user_login: 'user_login',
+                        user_nicename: 'user_nicename',
+                        display_name: 'display_name',
+                    },
+                    value: setting('username_col')(),
+                    onchange: setting('username_col'),
+                }),
+            ]),
 		];
 	}
 }
