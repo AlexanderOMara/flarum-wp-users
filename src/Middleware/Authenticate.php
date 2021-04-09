@@ -2,8 +2,8 @@
 
 namespace AlexanderOMara\FlarumWPUsers\Middleware;
 
-use Flarum\Http\SessionAuthenticator;
 use Flarum\Http\AccessToken;
+use Flarum\Http\SessionAuthenticator;
 use Flarum\Http\UrlGenerator;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\LoggedOut;
