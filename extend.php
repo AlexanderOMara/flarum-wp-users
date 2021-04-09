@@ -10,10 +10,10 @@ use AlexanderOMara\FlarumWPUsers\Middleware;
 return [
 	// Client-side code.
 	(new Extend\Frontend('forum'))
-		->js(__DIR__.'/js/dist/forum.js')
+		->js(__DIR__ . '/js/dist/forum.js')
 		->content(Listener\AddData::class),
 	(new Extend\Frontend('admin'))
-		->js(__DIR__.'/js/dist/admin.js')
+		->js(__DIR__ . '/js/dist/admin.js')
 		->content(Listener\AddData::class),
 
 	// Middleware.
