@@ -3,6 +3,7 @@
 namespace AlexanderOMara\FlarumWPUsers\Middleware;
 
 use Flarum\Http\SessionAuthenticator;
+use Flarum\Http\AccessToken;
 use Flarum\Http\UrlGenerator;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\LoggedOut;
@@ -101,7 +102,7 @@ class Authenticate implements Middleware {
 			null;
 		if ($wpActor) {
 			// Set the session on the actor and replace the actor.
-			// Do not set user_id on the session object.
+			// Do not set user on the session object.
 			// That would make authentication persist in Flarum itself.
 			// Which would prevent logout when WP cookie gone.
 			// Based on AuthenticateWithSession->process().
@@ -116,11 +117,11 @@ class Authenticate implements Middleware {
 			if ($sessionUserId !== Core::sessionUserIdGet($session)) {
 				$this->authenticator->logOut($session);
 				if ($sessionUserId !== null) {
-					// If a managed user, run login, but with a null user ID.
-					// This avoids setting user_id on the session object.
+					// If a managed user, run login, but with dummy token.
+					// A real token would validate with Flarum directly.
 					// That would make authentication persist in Flarum itself.
 					// Which would prevent logout when WP cookie gone.
-					$this->authenticator->logIn($session, null);
+					$this->authenticator->logIn($session, new AccessToken());
 				}
 				Core::sessionUserIdSet($session, $sessionUserId);
 			}
