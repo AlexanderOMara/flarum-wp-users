@@ -1,4 +1,4 @@
-FROM php:7.4.13-apache
+FROM php:7.4.16-apache
 
 RUN apt-get update && \
 	apt-get install -y  --no-install-recommends \
@@ -36,7 +36,7 @@ RUN apt-get update && \
 	chmod +x /usr/local/bin/wp && \
 	curl -L -s \
 		-o /usr/local/bin/composer \
-		https://getcomposer.org/download/2.0.8/composer.phar \
+		https://getcomposer.org/download/2.0.12/composer.phar \
 	&& \
 	chmod +x /usr/local/bin/composer
 

@@ -19,7 +19,7 @@ services:
       WORDPRESS_DB_PASS: toor
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DB_PREFIX: wppre_
-      WORDPRESS_INSTALL_URL: 'https://flarum-wp-users.localhost'
+      WORDPRESS_INSTALL_URL: 'https://localhost'
       WORDPRESS_INSTALL_TITLE: 'Test WordPress Site'
       WORDPRESS_INSTALL_ADMIN_USER: admin
       WORDPRESS_INSTALL_ADMIN_EMAIL: admin@example.com
