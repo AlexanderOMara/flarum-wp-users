@@ -43,7 +43,7 @@ class AddUserSaving {
 	protected function onSavingRegistering(Saving $event): void {
 		// Only an admin may register accounts bypassing extension.
 		// What RegisterUserHandler would do if allow_sign_up is false.
-		$event->actor->assertCan('administrate');
+		$event->actor->assertAdmin();
 	}
 
 	/**
@@ -55,7 +55,7 @@ class AddUserSaving {
 		// A managed user should not have their managed properties edited.
 		// Only an admin may change those managed properties.
 		if (!Core::allowedChangeCheck($event->user)) {
-			$event->actor->assertCan('administrate');
+			$event->actor->assertAdmin();
 		}
 	}
 }
