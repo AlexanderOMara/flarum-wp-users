@@ -41,49 +41,195 @@ class Core {
 	];
 
 	/**
-	 * Generate unique ID with 128 strong pseudo-random bits.
+	 * Settings object.
 	 *
-	 * @return string Unique ID.
+	 * @var SettingsRepositoryInterface
 	 */
-	protected static function uid() {
-		// The openssl extension is also a Flarum dependency.
-		return bin2hex(openssl_random_pseudo_bytes(16));
+	protected /*SettingsRepositoryInterface*/ $settings;
+
+	/**
+	 * Core functionality.
+	 *
+	 * @param SettingsRepositoryInterface $settings Settings object.
+	 */
+	public function __construct(SettingsRepositoryInterface $settings) {
+		$this->settings = $settings;
 	}
 
 	/**
 	 * Get setting value for this extension.
 	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
 	 * @param string $key Setting key.
 	 * @return string|null Setting value.
 	 */
-	public static function setting(
-		SettingsRepositoryInterface $settings,
-		string $key
-	): ?string {
-		return $settings->get(static::ID . '.' . $key);
+	public function setting(string $key): ?string {
+		return $this->settings->get(static::ID . '.' . $key);
 	}
 
 	/**
 	 * Get setting values for this extension, or null if not all set.
 	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
 	 * @param array $values Setting keys.
 	 * @return array|null Setting values.
 	 */
-	public static function settings(
-		SettingsRepositoryInterface $settings,
-		array $values
-	): ?array {
+	public function settings(array $values): ?array {
 		$r = [];
 		foreach ($values as $k) {
-			$value = static::setting($settings, $k);
+			$value = $this->setting($k);
 			if ($value === null) {
 				return null;
 			}
 			$r[$k] = $value;
 		}
 		return $r;
+	}
+
+	/**
+	 * Get cookie name from the settings.
+	 *
+	 * @return string|null Cookie name if configured.
+	 */
+	public function getCookieName(): ?string {
+		return $this->setting('cookie_name');
+	}
+
+	/**
+	 * Get login URL from the settings.
+	 *
+	 * @param string|null $destination Destination redirect.
+	 * @return string|null Login URL if configured.
+	 */
+	public function getLoginUrl(
+		?string $destination = null
+	): ?string {
+		$url = $this->setting('login_url');
+		return $url ? WordPress\Util::addQueryArgs($url, [
+			'redirect_to' => $destination
+		]) : null;
+	}
+
+	/**
+	 * Get register URL from the settings.
+	 *
+	 * @param string|null $destination Destination redirect.
+	 * @return string|null Register URL if configured.
+	 */
+	public function getRegisterUrl(
+		?string $destination = null
+	): ?string {
+		$url = $this->getLoginUrl();
+		return $url ? WordPress\Util::addQueryArgs($url, [
+			'action' => 'register',
+			'redirect_to' => $destination
+		]) : null;
+	}
+
+	/**
+	 * Get profile URL from the settings.
+	 *
+	 * @return string|null Profile URL if configured.
+	 */
+	public function getProfileUrl(): ?string {
+		return $this->setting('profile_url');
+	}
+
+	/**
+	 * Get logout URL from the settings.
+	 *
+	 * @param string|null $destination Destination redirect.
+	 * @param string|null $wpUserID WordPress user ID for the nonce.
+	 * @param string|null $wpCookie WordPress session cookie value.
+	 * @return string|null Logout URL if configured.
+	 */
+	public function getLogoutUrl(
+		?string $destination = null,
+		?string $wpUserID = null,
+		?string $wpCookie = null
+	): ?string {
+		$url = $this->getLoginUrl();
+		if (!$url) {
+			return null;
+		}
+
+		// Create a nonce object if configured.
+		$nonce = $this->getWordPressNonce($wpUserID, $wpCookie);
+
+		// Create URL with nonce if possible.
+		return WordPress\Util::addQueryArgs($url, [
+			'action' => 'logout',
+			'redirect_to' => $destination,
+			'_wpnonce' => $nonce ? $nonce->create('log-out') : null
+		]);
+	}
+
+	/**
+	 * Get WordPress nonce object if configured.
+	 *
+	 * @param string|null $wpUserID WordPress user ID for the nonce.
+	 * @param string|null $wpCookie WordPress session cookie value.
+	 * @return WordPress\Nonce|null The WordPress nonce object or null.
+	 */
+	public function getWordPressNonce(
+		?string $wpUserID,
+		?string $wpCookie
+	): ?WordPress\Nonce {
+		// Load all the settings if set.
+		$opts = $this->settings([
+			'nonce_key',
+			'nonce_salt'
+		]);
+		return $opts ? new WordPress\Nonce(
+			$opts['nonce_key'],
+			$opts['nonce_salt'],
+			$wpUserID,
+			$wpCookie
+		) : null;
+	}
+
+	/**
+	 * Get WordPress sessions object if configured.
+	 *
+	 * @return WordPress\Session Sessions utility or null.
+	 */
+	public function getWordPressSession(): ?WordPress\Session {
+		// Load all the settings if set.
+		$opts = $this->settings([
+			'db_host',
+			'db_user',
+			'db_pass',
+			'db_name',
+			'db_charset',
+			'db_pre',
+			'logged_in_key',
+			'logged_in_salt'
+		]);
+		return $opts ? new WordPress\Session(
+			new WordPress\Db(
+				$opts['db_host'],
+				$opts['db_user'],
+				$opts['db_pass'],
+				$opts['db_name'],
+				$opts['db_charset'],
+				$opts['db_pre']
+			),
+			$opts['logged_in_key'],
+			$opts['logged_in_salt']
+		) : null;
+	}
+
+	/**
+	 * Add payload to document.
+	 *
+	 * @param Document $view Document view.
+	 * @param User $user User object.
+	 */
+	public function addPayload(Document $view, ?User $user): void {
+		$view->payload[static::ID] = [
+			'loginUrl' => $this->getLoginUrl(),
+			'registerUrl' => $this->getRegisterUrl(),
+			'profileUrl' => $this->getProfileUrl(),
+			'allowedChanges' => $user ? static::allowedChangeList($user) : null
+		];
 	}
 
 	/**
@@ -118,192 +264,6 @@ class Core {
 		else {
 			$session->put(static::sessionUserIdKey(), $id);
 		}
-	}
-
-	/**
-	 * Get cookie name from the settings.
-	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
-	 * @return string|null Cookie name if configured.
-	 */
-	public static function getCookieName(
-		SettingsRepositoryInterface $settings
-	): ?string {
-		return static::setting($settings, 'cookie_name');
-	}
-
-	/**
-	 * Get login URL from the settings.
-	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
-	 * @param string|null $destination Destination redirect.
-	 * @return string|null Login URL if configured.
-	 */
-	public static function getLoginUrl(
-		SettingsRepositoryInterface $settings,
-		?string $destination = null
-	): ?string {
-		$url = static::setting($settings, 'login_url');
-		return $url ? WordPress\Util::addQueryArgs($url, [
-			'redirect_to' => $destination
-		]) : null;
-	}
-
-	/**
-	 * Get register URL from the settings.
-	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
-	 * @param string|null $destination Destination redirect.
-	 * @return string|null Register URL if configured.
-	 */
-	public static function getRegisterUrl(
-		SettingsRepositoryInterface $settings,
-		?string $destination = null
-	): ?string {
-		$url = static::getLoginUrl($settings);
-		return $url ? WordPress\Util::addQueryArgs($url, [
-			'action' => 'register',
-			'redirect_to' => $destination
-		]) : null;
-	}
-
-	/**
-	 * Get profile URL from the settings.
-	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
-	 * @return string|null Profile URL if configured.
-	 */
-	public static function getProfileUrl(
-		SettingsRepositoryInterface $settings
-	): ?string {
-		return static::setting($settings, 'profile_url');
-	}
-
-	/**
-	 * Get logout URL from the settings.
-	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
-	 * @param string|null $destination Destination redirect.
-	 * @param string|null $wpUserID WordPress user ID for the nonce.
-	 * @param string|null $wpCookie WordPress session cookie value.
-	 * @return string|null Logout URL if configured.
-	 */
-	public static function getLogoutUrl(
-		SettingsRepositoryInterface $settings,
-		?string $destination = null,
-		?string $wpUserID = null,
-		?string $wpCookie = null
-	): ?string {
-		$url = static::getLoginUrl($settings);
-		if (!$url) {
-			return null;
-		}
-
-		// Create a nonce object if configured.
-		$nonce = static::getWordPressNonce($settings, $wpUserID, $wpCookie);
-
-		// Create URL with nonce if possible.
-		return WordPress\Util::addQueryArgs($url, [
-			'action' => 'logout',
-			'redirect_to' => $destination,
-			'_wpnonce' => $nonce ? $nonce->create('log-out') : null
-		]);
-	}
-
-	/**
-	 * Set identifier of user managed by this extension.
-	 *
-	 * @param User $user User object.
-	 * @param string The WordPress user ID.
-	 */
-	public static function userManagedCreate(User $user, string $id): void {
-		$user->loginProviders()->create([
-			'provider' => static::ID,
-			'identifier' => $id
-		]);
-	}
-
-	/**
-	 * Get identifier of user managed by this extension.
-	 *
-	 * @param User $user User object.
-	 * @return string|null The WordPress user ID, or null if provider not set.
-	 */
-	public static function userManagedGet(User $user): ?string {
-		$provider = !$user->isGuest() ?
-			$user->loginProviders()->where('provider', static::ID)->first() :
-			null;
-		return $provider ? $provider->identifier : null;
-	}
-
-	/**
-	 * Check if user managed by this extension.
-	 *
-	 * @param User $user User object.
-	 * @return bool True if user managed.
-	 */
-	public static function userManagedHas(User $user): bool {
-		return static::userManagedGet($user) !== null;
-	}
-
-	/**
-	 * Get WordPress nonce object if configured.
-	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
-	 * @param string|null $wpUserID WordPress user ID for the nonce.
-	 * @param string|null $wpCookie WordPress session cookie value.
-	 * @return WordPress\Nonce|null The WordPress nonce object or null.
-	 */
-	public static function getWordPressNonce(
-		SettingsRepositoryInterface $settings,
-		?string $wpUserID,
-		?string $wpCookie
-	): ?WordPress\Nonce {
-		// Load all the settings if set.
-		$opts = static::settings($settings, [
-			'nonce_key',
-			'nonce_salt'
-		]);
-		return $opts ? new WordPress\Nonce(
-			$opts['nonce_key'],
-			$opts['nonce_salt'],
-			$wpUserID,
-			$wpCookie
-		) : null;
-	}
-
-	/**
-	 * Get WordPress sessions object if configured.
-	 *
-	 * @param SettingsRepositoryInterface $settings Settings object.
-	 * @return WordPress\Session Sessions utility or null.
-	 */
-	public static function getWordPressSession(
-		SettingsRepositoryInterface $settings
-	): ?WordPress\Session {
-		// Load all the settings if set.
-		$opts = static::settings($settings, [
-			'db_host',
-			'db_user',
-			'db_pass',
-			'db_name',
-			'db_charset',
-			'db_pre',
-			'logged_in_key',
-			'logged_in_salt'
-		]);
-		return $opts ? new WordPress\Session(
-			new WordPress\Db(
-				$opts['db_host'],
-				$opts['db_user'],
-				$opts['db_pass'],
-				$opts['db_name'],
-				$opts['db_charset'],
-				$opts['db_pre']
-			),
-			$opts['logged_in_key'],
-			$opts['logged_in_salt']
-		) : null;
 	}
 
 	/**
@@ -389,6 +349,42 @@ class Core {
 	}
 
 	/**
+	 * Set identifier of user managed by this extension.
+	 *
+	 * @param User $user User object.
+	 * @param string The WordPress user ID.
+	 */
+	public static function userManagedCreate(User $user, string $id): void {
+		$user->loginProviders()->create([
+			'provider' => static::ID,
+			'identifier' => $id
+		]);
+	}
+
+	/**
+	 * Get identifier of user managed by this extension.
+	 *
+	 * @param User $user User object.
+	 * @return string|null The WordPress user ID, or null if provider not set.
+	 */
+	public static function userManagedGet(User $user): ?string {
+		$provider = !$user->isGuest() ?
+			$user->loginProviders()->where('provider', static::ID)->first() :
+			null;
+		return $provider ? $provider->identifier : null;
+	}
+
+	/**
+	 * Check if user managed by this extension.
+	 *
+	 * @param User $user User object.
+	 * @return bool True if user managed.
+	 */
+	public static function userManagedHas(User $user): bool {
+		return static::userManagedGet($user) !== null;
+	}
+
+	/**
 	 * Get list of properties that are allowed to change for a user.
 	 *
 	 * @param User $user User object.
@@ -414,7 +410,7 @@ class Core {
 	 * @return bool True if no disallowed changes to the user.
 	 */
 	public static function allowedChangeCheck(User $user): bool {
-		$changeable = Core::allowedChangeList($user);
+		$changeable = static::allowedChangeList($user);
 
 		// Check for any values not supposed to change but did.
 		foreach ($changeable as $k=>$v) {
@@ -444,22 +440,12 @@ class Core {
 	}
 
 	/**
-	 * Add payload to document.
+	 * Generate unique ID with 128 strong pseudo-random bits.
 	 *
-	 * @param Document $view Document view.
-	 * @param SettingsRepositoryInterface $settings Settings object.
-	 * @param User $user User object.
+	 * @return string Unique ID.
 	 */
-	public static function addPayload(
-		Document $view,
-		SettingsRepositoryInterface $settings,
-		?User $user
-	): void {
-		$view->payload[static::ID] = [
-			'loginUrl' => static::getLoginUrl($settings),
-			'registerUrl' => static::getRegisterUrl($settings),
-			'profileUrl' => static::getProfileUrl($settings),
-			'allowedChanges' => $user ? static::allowedChangeList($user) : null
-		];
+	protected static function uid() {
+		// The openssl extension is also a Flarum dependency.
+		return bin2hex(openssl_random_pseudo_bytes(16));
 	}
 }

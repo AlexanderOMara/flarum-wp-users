@@ -7,8 +7,13 @@ use Illuminate\Contracts\Events\Dispatcher;
 use AlexanderOMara\FlarumWPUsers\Extenders;
 use AlexanderOMara\FlarumWPUsers\Listener;
 use AlexanderOMara\FlarumWPUsers\Middleware;
+use AlexanderOMara\FlarumWPUsers\Provider;
 
 return [
+	// Register core class as a service (a singleton).
+	(new Extend\ServiceProvider())
+		->register(Provider\CoreProvider::class),
+
 	// Client-side code.
 	(new Extend\Frontend('forum'))
 		->js(__DIR__ . '/js/dist/forum.js')

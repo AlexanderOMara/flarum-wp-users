@@ -50,6 +50,13 @@ class Authenticate implements Middleware {
 	protected /*UrlGenerator*/ $url;
 
 	/**
+	 * Core object.
+	 *
+	 * @var Core
+	 */
+	protected /*Core*/ $core;
+
+	/**
 	 * LoggedOut user.
 	 *
 	 * @var User|null
@@ -63,17 +70,20 @@ class Authenticate implements Middleware {
 	 * @param SessionAuthenticator $authenticator Authenticator object.
 	 * @param SettingsRepositoryInterface $settings Settings object.
 	 * @param UrlGenerator $url URL object.
+	 * @param Core $core Core object.
 	 */
 	public function __construct(
 		EventsDispatcher $events,
 		SessionAuthenticator $authenticator,
 		SettingsRepositoryInterface $settings,
-		UrlGenerator $url
+		UrlGenerator $url,
+		Core $core
 	) {
 		$this->events = $events;
 		$this->authenticator = $authenticator;
 		$this->settings = $settings;
 		$this->url = $url;
+		$this->core = $core;
 	}
 
 	/**
@@ -169,8 +179,7 @@ class Authenticate implements Middleware {
 		}
 
 		// Get the logout URL if configured, else no way to intercept it.
-		$logoutUrl = Core::getLogoutUrl(
-			$this->settings,
+		$logoutUrl = $this->core->getLogoutUrl(
 			$destination,
 			$wpUserID,
 			$this->getCookie($request)
@@ -223,7 +232,7 @@ class Authenticate implements Middleware {
 	 * @return string|null Cookie value or null.
 	 */
 	protected function getCookie(Request $request): ?string {
-		$cookieName = Core::getCookieName($this->settings);
+		$cookieName = $this->core->getCookieName();
 		return $cookieName ?
 			($request->getCookieParams()[$cookieName] ?? null) :
 			null;
@@ -240,7 +249,7 @@ class Authenticate implements Middleware {
 		string $cookie,
 		bool $hasGracePeriod
 	): ?array {
-		$wps = Core::getWordPressSession($this->settings);
+		$wps = $this->core->getWordPressSession();
 		return $wps ? $wps->getUser($cookie, $hasGracePeriod) : null;
 	}
 
