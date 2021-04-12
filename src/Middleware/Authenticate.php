@@ -179,7 +179,7 @@ class Authenticate implements Middleware {
 		}
 
 		// Get the logout URL if configured, else no way to intercept it.
-		$logoutUrl = $this->core->getLogoutUrl(
+		$logoutUrl = $this->core->getWP()->getLogoutUrl(
 			$destination,
 			$wpUserID,
 			$this->getCookie($request)
@@ -232,7 +232,7 @@ class Authenticate implements Middleware {
 	 * @return string|null Cookie value or null.
 	 */
 	protected function getCookie(Request $request): ?string {
-		$cookieName = $this->core->getCookieName();
+		$cookieName = $this->core->getWP()->getCookieName();
 		return $cookieName ?
 			($request->getCookieParams()[$cookieName] ?? null) :
 			null;
@@ -249,7 +249,7 @@ class Authenticate implements Middleware {
 		string $cookie,
 		bool $hasGracePeriod
 	): ?array {
-		$wps = $this->core->getWordPressSession();
+		$wps = $this->core->getWP()->getSession();
 		return $wps ? $wps->getUser($cookie, $hasGracePeriod) : null;
 	}
 

@@ -13,7 +13,7 @@ class Db extends PDO {
 	 *
 	 * @var string
 	 */
-	public /*string*/ $prefix;
+	protected /*string*/ $prefix;
 
 	/**
 	 * WordPress database class.

@@ -9,7 +9,7 @@ use Flarum\User\LoginProvider;
 use Flarum\User\User;
 use Illuminate\Contracts\Session\Session;
 
-use AlexanderOMara\FlarumWPUsers\WordPress;
+use AlexanderOMara\FlarumWPUsers\WordPress\WordPress;
 
 /**
  * Core functionality.
@@ -48,12 +48,35 @@ class Core {
 	protected /*SettingsRepositoryInterface*/ $settings;
 
 	/**
+	 * WordPress object.
+	 *
+	 * @var WordPress
+	 */
+	protected /*WordPress*/ $wp;
+
+	/**
 	 * Core functionality.
 	 *
 	 * @param SettingsRepositoryInterface $settings Settings object.
 	 */
 	public function __construct(SettingsRepositoryInterface $settings) {
 		$this->settings = $settings;
+
+		$this->wp = new WordPress(
+			$this->setting('db_host'),
+			$this->setting('db_user'),
+			$this->setting('db_pass'),
+			$this->setting('db_name'),
+			$this->setting('db_charset'),
+			$this->setting('db_pre'),
+			$this->setting('logged_in_key'),
+			$this->setting('logged_in_salt'),
+			$this->setting('nonce_key'),
+			$this->setting('nonce_salt'),
+			$this->setting('cookie_name'),
+			$this->setting('login_url'),
+			$this->setting('profile_url')
+		);
 	}
 
 	/**
@@ -67,154 +90,12 @@ class Core {
 	}
 
 	/**
-	 * Get setting values for this extension, or null if not all set.
+	 * The the WordPress object.
 	 *
-	 * @param array $values Setting keys.
-	 * @return array|null Setting values.
+	 * @return WordPress WordPress object.
 	 */
-	public function settings(array $values): ?array {
-		$r = [];
-		foreach ($values as $k) {
-			$value = $this->setting($k);
-			if ($value === null) {
-				return null;
-			}
-			$r[$k] = $value;
-		}
-		return $r;
-	}
-
-	/**
-	 * Get cookie name from the settings.
-	 *
-	 * @return string|null Cookie name if configured.
-	 */
-	public function getCookieName(): ?string {
-		return $this->setting('cookie_name');
-	}
-
-	/**
-	 * Get login URL from the settings.
-	 *
-	 * @param string|null $destination Destination redirect.
-	 * @return string|null Login URL if configured.
-	 */
-	public function getLoginUrl(
-		?string $destination = null
-	): ?string {
-		$url = $this->setting('login_url');
-		return $url ? WordPress\Util::addQueryArgs($url, [
-			'redirect_to' => $destination
-		]) : null;
-	}
-
-	/**
-	 * Get register URL from the settings.
-	 *
-	 * @param string|null $destination Destination redirect.
-	 * @return string|null Register URL if configured.
-	 */
-	public function getRegisterUrl(
-		?string $destination = null
-	): ?string {
-		$url = $this->getLoginUrl();
-		return $url ? WordPress\Util::addQueryArgs($url, [
-			'action' => 'register',
-			'redirect_to' => $destination
-		]) : null;
-	}
-
-	/**
-	 * Get profile URL from the settings.
-	 *
-	 * @return string|null Profile URL if configured.
-	 */
-	public function getProfileUrl(): ?string {
-		return $this->setting('profile_url');
-	}
-
-	/**
-	 * Get logout URL from the settings.
-	 *
-	 * @param string|null $destination Destination redirect.
-	 * @param string|null $wpUserID WordPress user ID for the nonce.
-	 * @param string|null $wpCookie WordPress session cookie value.
-	 * @return string|null Logout URL if configured.
-	 */
-	public function getLogoutUrl(
-		?string $destination = null,
-		?string $wpUserID = null,
-		?string $wpCookie = null
-	): ?string {
-		$url = $this->getLoginUrl();
-		if (!$url) {
-			return null;
-		}
-
-		// Create a nonce object if configured.
-		$nonce = $this->getWordPressNonce($wpUserID, $wpCookie);
-
-		// Create URL with nonce if possible.
-		return WordPress\Util::addQueryArgs($url, [
-			'action' => 'logout',
-			'redirect_to' => $destination,
-			'_wpnonce' => $nonce ? $nonce->create('log-out') : null
-		]);
-	}
-
-	/**
-	 * Get WordPress nonce object if configured.
-	 *
-	 * @param string|null $wpUserID WordPress user ID for the nonce.
-	 * @param string|null $wpCookie WordPress session cookie value.
-	 * @return WordPress\Nonce|null The WordPress nonce object or null.
-	 */
-	public function getWordPressNonce(
-		?string $wpUserID,
-		?string $wpCookie
-	): ?WordPress\Nonce {
-		// Load all the settings if set.
-		$opts = $this->settings([
-			'nonce_key',
-			'nonce_salt'
-		]);
-		return $opts ? new WordPress\Nonce(
-			$opts['nonce_key'],
-			$opts['nonce_salt'],
-			$wpUserID,
-			$wpCookie
-		) : null;
-	}
-
-	/**
-	 * Get WordPress sessions object if configured.
-	 *
-	 * @return WordPress\Session Sessions utility or null.
-	 */
-	public function getWordPressSession(): ?WordPress\Session {
-		// Load all the settings if set.
-		$opts = $this->settings([
-			'db_host',
-			'db_user',
-			'db_pass',
-			'db_name',
-			'db_charset',
-			'db_pre',
-			'logged_in_key',
-			'logged_in_salt'
-		]);
-		return $opts ? new WordPress\Session(
-			new WordPress\Db(
-				$opts['db_host'],
-				$opts['db_user'],
-				$opts['db_pass'],
-				$opts['db_name'],
-				$opts['db_charset'],
-				$opts['db_pre']
-			),
-			$opts['logged_in_key'],
-			$opts['logged_in_salt']
-		) : null;
+	public function getWP(): WordPress {
+		return $this->wp;
 	}
 
 	/**
@@ -225,9 +106,9 @@ class Core {
 	 */
 	public function addPayload(Document $view, ?User $user): void {
 		$view->payload[static::ID] = [
-			'loginUrl' => $this->getLoginUrl(),
-			'registerUrl' => $this->getRegisterUrl(),
-			'profileUrl' => $this->getProfileUrl(),
+			'loginUrl' => $this->wp->getLoginUrl(),
+			'registerUrl' => $this->wp->getRegisterUrl(),
+			'profileUrl' => $this->wp->getProfileUrl(),
 			'allowedChanges' => $user ? static::allowedChangeList($user) : null
 		];
 	}

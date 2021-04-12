@@ -2,8 +2,6 @@
 
 namespace AlexanderOMara\FlarumWPUsers\WordPress;
 
-use AlexanderOMara\FlarumWPUsers\WordPress\Util;
-
 /**
  * WordPress nonce class.
  */
@@ -39,6 +37,8 @@ class Nonce {
 	/**
 	 * WordPress nonce class.
 	 *
+	 * @param string $nonceKey Nonce key.
+	 * @param string $nonceSalt Nonce salt.
 	 * @param string|null $userID User ID.
 	 * @param string|null $cookie Session cookie.
 	 */
