@@ -162,12 +162,12 @@ class Core {
 		// If no managed user, check for unmanaged user with the same email.
 		if (!$user) {
 			// If a match and unmanaged make it so and continue with it.
-			$userSameEmail = User::where([
+			$userSame = User::where([
 				'email' => $wpUser[static::$userMap['email']['key']]
 			])->first();
-			if ($userSameEmail && !static::userManagedHas($userSameEmail)) {
-				static::userManagedCreate($userSameEmail, $wpUser['ID']);
-				$user = $userSameEmail;
+			if ($userSame && static::userManagedGet($userSame) === null) {
+				static::userManagedCreate($userSame, $wpUser['ID']);
+				$user = $userSame;
 			}
 		}
 
@@ -188,7 +188,7 @@ class Core {
 			}
 
 			// If account is not managed by this extension, cannot continue.
-			if (!static::userManagedHas($dupe)) {
+			if (static::userManagedGet($dupe) === null) {
 				return null;
 			}
 
@@ -256,16 +256,6 @@ class Core {
 	}
 
 	/**
-	 * Check if user managed by this extension.
-	 *
-	 * @param User $user User object.
-	 * @return bool True if user managed.
-	 */
-	public static function userManagedHas(User $user): bool {
-		return static::userManagedGet($user) !== null;
-	}
-
-	/**
 	 * Get list of properties that are allowed to change for a user.
 	 *
 	 * @param User $user User object.
@@ -273,7 +263,7 @@ class Core {
 	 */
 	public static function allowedChangeList(User $user): array {
 		$guest = $user->isGuest();
-		$managed = $guest ? false : static::userManagedHas($user);
+		$managed = $guest ? false : (static::userManagedGet($user) !== null);
 		return [
 			'email' => !$guest && !$managed,
 			'username' => !$guest && !$managed,
