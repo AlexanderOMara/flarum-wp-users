@@ -278,7 +278,7 @@ class Core {
 			'email' => !$guest && !$managed,
 			'username' => !$guest && !$managed,
 			'password' => !$guest && (
-				$user->getOriginal('password') || !$managed
+				!$managed || $user->getOriginal('password')
 			)
 		];
 	}
