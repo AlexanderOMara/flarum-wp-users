@@ -67,6 +67,7 @@ class WordPress {
 	 * @param string|null $loggedInKey Config value.
 	 * @param string|null $loggedInSalt Config value.
 	 * @param string|null $nonceKey Config value.
+	 * @param string|null $nonceSalt Config value.
 	 * @param string|null $cookieName Cookie name.
 	 * @param string|null $loginUrl Login URL.
 	 * @param string|null $profileUrl Profile URL.
@@ -142,10 +143,7 @@ class WordPress {
 	 * @param string|null $wpCookie WordPress session cookie value.
 	 * @return Nonce|null The WordPress nonce object or null.
 	 */
-	public function getNonce(
-		?string $wpUserID,
-		?string $wpCookie
-	): ?Nonce {
+	public function getNonce(?string $wpUserID, ?string $wpCookie): ?Nonce {
 		if ($this->nonceKey && $this->nonceSalt) {
 			return new Nonce(
 				$this->nonceKey,
