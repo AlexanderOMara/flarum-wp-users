@@ -209,7 +209,10 @@ class Authenticate implements Middleware {
 		$hasGracePeriod = $this->requestHasGracePeriod($request);
 
 		// Lookup the WP user by session if configured and valid.
-		$wpUser = $this->getWordPressUser($cookie, $hasGracePeriod);
+		$wpUser = $this->core->getWP()->validateAuthCookie(
+			$cookie,
+			$hasGracePeriod
+		);
 		if (!$wpUser) {
 			return null;
 		}
@@ -236,23 +239,6 @@ class Authenticate implements Middleware {
 		return $cookieName ?
 			($request->getCookieParams()[$cookieName] ?? null) :
 			null;
-	}
-
-	/**
-	 * Get WordPress user from session cookie if configured.
-	 *
-	 * @param string $cookie Cookie value.
-	 * @param bool $hasGracePeriod Should include grace period.
-	 * @return array|null The WordPress user data or null.
-	 */
-	protected function getWordPressUser(
-		string $cookie,
-		bool $hasGracePeriod
-	): ?array {
-		return $this->core->getWP()->validateAuthCookie(
-			$cookie,
-			$hasGracePeriod
-		);
 	}
 
 	/**
