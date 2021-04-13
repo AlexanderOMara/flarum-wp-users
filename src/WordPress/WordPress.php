@@ -220,7 +220,7 @@ class WordPress {
 	 * @param string $value Search value.
 	 * @return array|null Associative array if found or null.
 	 */
-	protected function getUserBy(string $key, string $value): ?array {
+	public function getUserBy(string $key, string $value): ?array {
 		$keyMap = [
 			'id' => 'ID',
 			'ID' => 'ID',

@@ -8,6 +8,7 @@ use Flarum\User\Event\EmailChangeRequested;
 use Flarum\User\LoginProvider;
 use Flarum\User\User;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Database\QueryException;
 
 use AlexanderOMara\FlarumWPUsers\WordPress\WordPress;
 
@@ -114,40 +115,6 @@ class Core {
 	}
 
 	/**
-	 * Get session value user ID key.
-	 *
-	 * @return string Setting key.
-	 */
-	public static function sessionUserIdKey(): string {
-		return static::ID . '.user_id';
-	}
-
-	/**
-	 * Get session user ID if set.
-	 *
-	 * @param Session $session Session object.
-	 * @return int User ID or null.
-	 */
-	public static function sessionUserIdGet(Session $session): ?int {
-		return $session->get(static::sessionUserIdKey());
-	}
-
-	/**
-	 * Set session user ID.
-	 *
-	 * @param Session $session Session object.
-	 * @param int|null $id User ID or null.
-	 */
-	public static function sessionUserIdSet(Session $session, ?int $id): void {
-		if ($id === null) {
-			$session->remove(static::sessionUserIdKey());
-		}
-		else {
-			$session->put(static::sessionUserIdKey(), $id);
-		}
-	}
-
-	/**
 	 * Get Flarum user for WordPress user, creating user if necessary.
 	 * If an unmanaged user with the same email exists, user cannot be created.
 	 * If new user cannot be created, null is returned.
@@ -155,7 +122,7 @@ class Core {
 	 * @param array $wpUser WordPress user.
 	 * @return User|null Flarum user.
 	 */
-	public static function ensureUser(array $wpUser): ?User {
+	public function ensureUser(array $wpUser): ?User {
 		// Lookup managed user if already exists.
 		$user = LoginProvider::logIn(static::ID, $wpUser['ID']);
 
@@ -188,11 +155,25 @@ class Core {
 			}
 
 			// If account is not managed by this extension, cannot continue.
-			if (static::userManagedGet($dupe) === null) {
+			$wpDupeId = static::userManagedGet($dupe);
+			if ($wpDupeId === null) {
 				return null;
 			}
 
-			// Replace with temporary and unique value.
+			// Try to correct the other user is possible.
+			$wpDupeUser = $this->wp->getUserBy('ID', $wpDupeId);
+			if ($wpDupeUser) {
+				try {
+					$dupe->{$v['setter']}($wpDupeUser[$v['key']]);
+					$dupe->save();
+					continue;
+				}
+				catch (QueryException $ex) {
+					// Do nothing.
+				}
+			}
+
+			// Failing that, replace with temporary and unique value.
 			// The correct value will be set on their next login.
 			$dupe->{$v['setter']}(
 				sprintf($v['conflict'], $dupe->id, static::uid())
@@ -227,6 +208,40 @@ class Core {
 		$user->save();
 		static::userManagedCreate($user, $wpUser['ID']);
 		return $user;
+	}
+
+	/**
+	 * Get session value user ID key.
+	 *
+	 * @return string Setting key.
+	 */
+	public static function sessionUserIdKey(): string {
+		return static::ID . '.user_id';
+	}
+
+	/**
+	 * Get session user ID if set.
+	 *
+	 * @param Session $session Session object.
+	 * @return int User ID or null.
+	 */
+	public static function sessionUserIdGet(Session $session): ?int {
+		return $session->get(static::sessionUserIdKey());
+	}
+
+	/**
+	 * Set session user ID.
+	 *
+	 * @param Session $session Session object.
+	 * @param int|null $id User ID or null.
+	 */
+	public static function sessionUserIdSet(Session $session, ?int $id): void {
+		if ($id === null) {
+			$session->remove(static::sessionUserIdKey());
+		}
+		else {
+			$session->put(static::sessionUserIdKey(), $id);
+		}
 	}
 
 	/**
