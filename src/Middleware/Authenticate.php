@@ -249,8 +249,10 @@ class Authenticate implements Middleware {
 		string $cookie,
 		bool $hasGracePeriod
 	): ?array {
-		$wps = $this->core->getWP()->getSession();
-		return $wps ? $wps->validateAuthCookie($cookie, $hasGracePeriod) : null;
+		return $this->core->getWP()->validateAuthCookie(
+			$cookie,
+			$hasGracePeriod
+		);
 	}
 
 	/**
