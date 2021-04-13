@@ -181,7 +181,7 @@ class Session {
 			$expiration,
 			$token
 		]), $this->loggedInKey . $this->loggedInSalt);
-		$algo = function_exists('hash') ? 'sha256' : 'sha1';
+		$algo = strlen($hmac) === 64 ? 'sha256' : 'sha1';
 		$hash = hash_hmac($algo, implode('|', [
 			$username,
 			$expiration,
