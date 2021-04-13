@@ -308,21 +308,27 @@ class Core {
 		// If email cannot change, check for EmailChangeRequested events.
 		// This event will defer changing the email value.
 		if (!$changeable['email']) {
-			// Read all the events, and add them back.
-			$events = $user->releaseEvents();
-			foreach ($events as $event) {
-				$user->raise($event);
-			}
-
-			// If an EmailChangeRequested event, not allowed.
-			foreach ($events as $event) {
+			foreach (static::getEventGeneratorEvents($user) as $event) {
 				if ($event instanceof EmailChangeRequested) {
 					return false;
 				}
 			}
 		}
-
 		return true;
+	}
+
+	/**
+	 * Get events from an object that generated events.
+	 *
+	 * @return array Event objects.
+	 */
+	protected static function getEventGeneratorEvents($object): array {
+		// Read all the events, and add them back (no getter).
+		$events = $object->releaseEvents();
+		foreach ($events as $event) {
+			$object->raise($event);
+		}
+		return $events;
 	}
 
 	/**
