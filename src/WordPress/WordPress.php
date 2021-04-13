@@ -256,8 +256,8 @@ class WordPress {
 	 * @param string $token Session token.
 	 * @return string Hashed token.
 	 */
-	protected function hashToken(string $token): string {
-		return function_exists('hash') ? hash('sha256', $token) : sha1($token);
+	protected function sessionHashToken(string $token): string {
+		return hash('sha256', $token);
 	}
 
 	/**
@@ -307,7 +307,7 @@ class WordPress {
 		string $userID,
 		string $token
 	): bool {
-		$verifier = $this->hashToken($token);
+		$verifier = $this->sessionHashToken($token);
 		return (bool)$this->sessionTokenGetSession($userID, $verifier);
 	}
 
