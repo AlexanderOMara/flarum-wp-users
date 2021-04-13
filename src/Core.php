@@ -160,7 +160,7 @@ class Core {
 				return null;
 			}
 
-			// Try to correct the other user is possible.
+			// Try to correct the other user if possible.
 			$wpDupeUser = $this->wp->getUserBy('ID', $wpDupeId);
 			if ($wpDupeUser) {
 				try {
