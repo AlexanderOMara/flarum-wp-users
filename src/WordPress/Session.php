@@ -141,7 +141,10 @@ class Session {
 	 * @param bool $hasGracePeriod Option to include the grace period.
 	 * @return array|null Associative array if valid or null.
 	 */
-	public function getUser(string $cookie, bool $hasGracePeriod): ?array {
+	public function validateAuthCookie(
+		string $cookie,
+		bool $hasGracePeriod
+	): ?array {
 		// Parse cookie if valid.
 		$elements = Util::parseAuthCookie($cookie);
 		if (!$elements) {
