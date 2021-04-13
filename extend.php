@@ -2,9 +2,11 @@
 
 use Flarum\Extend;
 use Flarum\Http\Middleware as HttpMiddleware;
+use Flarum\User\Event\Saving;
 use Illuminate\Contracts\Events\Dispatcher;
 
 use AlexanderOMara\FlarumWPUsers\Extenders;
+use AlexanderOMara\FlarumWPUsers\Events;
 use AlexanderOMara\FlarumWPUsers\Listener;
 use AlexanderOMara\FlarumWPUsers\Middleware;
 use AlexanderOMara\FlarumWPUsers\Provider;
@@ -39,12 +41,11 @@ return [
 			Middleware\Authenticate::class
 		),
 
+	// Events.
+	(new Extend\Event())
+		->listen(Saving::class, Events\UserSaving::class),
+
 	// Extenders.
 	new Extenders\RoutesApi(),
-	new Extenders\RoutesForum(),
-
-	// Events.
-	function (Dispatcher $events) {
-		$events->subscribe(Listener\AddUserSaving::class);
-	}
+	new Extenders\RoutesForum()
 ];

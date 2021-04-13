@@ -1,31 +1,18 @@
 <?php
 
-namespace AlexanderOMara\FlarumWPUsers\Listener;
+namespace AlexanderOMara\FlarumWPUsers\Events;
 
 use Flarum\User\Event\Saving;
-use Illuminate\Contracts\Events\Dispatcher;
 
 use AlexanderOMara\FlarumWPUsers\Core;
 
-/**
- * User Saving event hook.
- */
-class AddUserSaving {
+class UserSaving {
 	/**
-	 * Subscribe handler.
-	 *
-	 * @param Saving $events Events dispatcher.
-	 */
-	public function subscribe(Dispatcher $events): void {
-		$events->listen(Saving::class, [$this, 'onSaving']);
-	}
-
-	/**
-	 * Saving callback.
+	 * Event handler.
 	 *
 	 * @param Saving $event Saving event.
 	 */
-	public function onSaving(Saving $event): void {
+	public function handle(Saving $event) {
 		// If no id set, user is being registered.
 		if ($event->user->id === null) {
 			$this->onSavingRegistering($event);
