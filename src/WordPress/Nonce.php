@@ -25,7 +25,7 @@ class Nonce {
 	 *
 	 * @var string|null
 	 */
-	protected /*?string*/ $userID;
+	protected /*?string*/ $userId;
 
 	/**
 	 * Session cookie.
@@ -39,28 +39,28 @@ class Nonce {
 	 *
 	 * @param string $nonceKey Nonce key.
 	 * @param string $nonceSalt Nonce salt.
-	 * @param string|null $userID User ID.
+	 * @param string|null $userId User ID.
 	 * @param string|null $cookie Session cookie.
 	 */
 	public function __construct(
 		string $nonceKey,
 		string $nonceSalt,
-		?string $userID,
+		?string $userId,
 		?string $cookie
 	) {
 		$this->nonceKey = $nonceKey;
 		$this->nonceSalt = $nonceSalt;
-		$this->userID = $userID;
+		$this->userId = $userId;
 		$this->cookie = $cookie;
 	}
 
 	/**
 	 * Get current user ID, if null default zero.
 	 *
-	 * @return string Uver ID.
+	 * @return string User ID.
 	 */
-	protected function getUserID(): string {
-		return $this->userID ?? '0';
+	protected function getUserId(): string {
+		return $this->userId ?? '0';
 	}
 
 	/**
@@ -90,7 +90,7 @@ class Nonce {
 	 * @return string Nonce token.
 	 */
 	public function create($action = -1): string {
-		$uid = (int)$this->getUserID();
+		$uid = (int)$this->getUserId();
 		$token = $this->getSessionToken();
 		$tick = $this->nonceTick();
 		return substr(Util::hash(

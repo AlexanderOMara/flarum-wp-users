@@ -231,12 +231,12 @@ class Core {
 	public function getDisplayNameCached(User $user): ?string {
 		$id = $user->id;
 		if (!isset($this->displayNameCache[$id])) {
-			$wpUserID = static::userManagedGet($user);
-			if ($wpUserID === null) {
+			$wpUserId = static::userManagedGet($user);
+			if ($wpUserId === null) {
 				$this->displayNameCache[$id] = '';
 			}
 			else {
-				$wpUser = $this->wp->getUserBy('ID', $wpUserID);
+				$wpUser = $this->wp->getUserBy('ID', $wpUserId);
 				$this->displayNameCache[$id] = $wpUser ?
 					$wpUser['display_name'] :
 					'';

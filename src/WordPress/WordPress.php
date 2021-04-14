@@ -123,16 +123,16 @@ class WordPress {
 	/**
 	 * Get WordPress nonce object if configured.
 	 *
-	 * @param string|null $wpUserID WordPress user ID for the nonce.
+	 * @param string|null $wpUserId WordPress user ID for the nonce.
 	 * @param string|null $wpCookie WordPress session cookie value.
 	 * @return Nonce|null The WordPress nonce object or null.
 	 */
-	public function getNonce(?string $wpUserID, ?string $wpCookie): ?Nonce {
+	public function getNonce(?string $wpUserId, ?string $wpCookie): ?Nonce {
 		if ($this->nonceKey && $this->nonceSalt) {
 			return new Nonce(
 				$this->nonceKey,
 				$this->nonceSalt,
-				$wpUserID,
+				$wpUserId,
 				$wpCookie
 			);
 		}
@@ -179,13 +179,13 @@ class WordPress {
 	 * Get logout URL from the settings.
 	 *
 	 * @param string|null $destination Destination redirect.
-	 * @param string|null $wpUserID WordPress user ID for the nonce.
+	 * @param string|null $wpUserId WordPress user ID for the nonce.
 	 * @param string|null $wpCookie WordPress session cookie value.
 	 * @return string|null Logout URL if configured.
 	 */
 	public function getLogoutUrl(
 		?string $destination = null,
-		?string $wpUserID = null,
+		?string $wpUserId = null,
 		?string $wpCookie = null
 	): ?string {
 		$url = $this->getLoginUrl();
@@ -194,7 +194,7 @@ class WordPress {
 		}
 
 		// Create a nonce object if configured.
-		$nonce = $this->getNonce($wpUserID, $wpCookie);
+		$nonce = $this->getNonce($wpUserId, $wpCookie);
 
 		// Create URL with nonce if possible.
 		return Util::addQueryArgs($url, [
@@ -254,19 +254,19 @@ class WordPress {
 	/**
 	 * Compatibile subset of WP_User_Meta_Session_Tokens->get_sessions.
 	 *
-	 * @param string $userID User ID.
+	 * @param string $userId User ID.
 	 * @param string $verifier Session key.
 	 * @return array Associative array of sessions.
 	 */
 	protected function sessionTokenGetSessions(
-		string $userID,
+		string $userId,
 		string $verifier
 	): array {
 		$tbl = $this->db->table('usermeta');
 		$stmt = $this->db->prepare(
 			"SELECT * FROM `{$tbl}` WHERE `user_id`=? AND `meta_key`=? LIMIT 1"
 		);
-		$stmt->execute([$userID, 'session_tokens']);
+		$stmt->execute([$userId, 'session_tokens']);
 		$row = $stmt->fetch();
 		$value = $row ? unserialize($row['meta_value']) : null;
 		return is_array($value) ? $value : [];
@@ -275,31 +275,31 @@ class WordPress {
 	/**
 	 * Compatibile subset of WP_User_Meta_Session_Tokens->get_session.
 	 *
-	 * @param string $userID User ID.
+	 * @param string $userId User ID.
 	 * @param string $verifier Session key.
 	 * @return array|null Associative array if valid or null.
 	 */
 	protected function sessionTokenGetSession(
-		string $userID,
+		string $userId,
 		string $verifier
 	): ?array {
-		$sessions = $this->sessionTokenGetSessions($userID, $verifier);
+		$sessions = $this->sessionTokenGetSessions($userId, $verifier);
 		return $sessions[$verifier] ?? null;
 	}
 
 	/**
 	 * Compatibile subset of WP_Session_Tokens->verify.
 	 *
-	 * @param string $userID User ID.
+	 * @param string $userId User ID.
 	 * @param string $token Session token.
 	 * @return bool True if user has session token.
 	 */
 	protected function sessionTokenVerify(
-		string $userID,
+		string $userId,
 		string $token
 	): bool {
 		$verifier = $this->sessionHashToken($token);
-		return (bool)$this->sessionTokenGetSession($userID, $verifier);
+		return (bool)$this->sessionTokenGetSession($userId, $verifier);
 	}
 
 	/**

@@ -162,8 +162,8 @@ class Authenticate implements Middleware {
 		$this->loggedOut = null;
 
 		// If user not manager, no need to intercept.
-		$wpUserID = Core::userManagedGet($user);
-		if ($wpUserID === null) {
+		$wpUserId = Core::userManagedGet($user);
+		if ($wpUserId === null) {
 			return $response;
 		}
 
@@ -181,7 +181,7 @@ class Authenticate implements Middleware {
 		// Get the logout URL if configured, else no way to intercept it.
 		$logoutUrl = $this->core->getWP()->getLogoutUrl(
 			$destination,
-			$wpUserID,
+			$wpUserId,
 			$this->getCookie($request)
 		);
 		if (!$logoutUrl) {
