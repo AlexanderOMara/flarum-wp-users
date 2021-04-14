@@ -5,10 +5,12 @@ use Flarum\Http\Middleware as HttpMiddleware;
 use Flarum\User\Event\Saving;
 use Illuminate\Contracts\Events\Dispatcher;
 
+use AlexanderOMara\FlarumWPUsers\Core;
 use AlexanderOMara\FlarumWPUsers\Extenders;
 use AlexanderOMara\FlarumWPUsers\Events;
 use AlexanderOMara\FlarumWPUsers\Listener;
 use AlexanderOMara\FlarumWPUsers\Middleware;
+use AlexanderOMara\FlarumWPUsers\DisplayName;
 use AlexanderOMara\FlarumWPUsers\Provider;
 
 return [
@@ -47,5 +49,12 @@ return [
 
 	// Extenders.
 	new Extenders\RoutesApi(),
-	new Extenders\RoutesForum()
+	new Extenders\RoutesForum(),
+
+	// Display name.
+	(new Extend\User())
+		->displayNameDriver(
+			Core::DISPLAY_NAME_DRIVER,
+			DisplayName\Driver::class
+		)
 ];

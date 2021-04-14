@@ -24,6 +24,11 @@ class Core {
 	public const ID = 'alexanderomara-wp-users';
 
 	/**
+	 * Display name driver ID.
+	 */
+	public const DISPLAY_NAME_DRIVER = 'WordPress';
+
+	/**
 	 * User property mappings with conflict fallback sprintf format.
 	 *
 	 * @var array
@@ -54,6 +59,13 @@ class Core {
 	 * @var WordPress
 	 */
 	protected /*WordPress*/ $wp;
+
+	/**
+	 * User display name cache.
+	 *
+	 * @var array
+	 */
+	protected /*array*/ $displayNameCache = [];
 
 	/**
 	 * Core functionality.
@@ -208,6 +220,30 @@ class Core {
 		$user->save();
 		static::userManagedCreate($user, $wpUser['ID']);
 		return $user;
+	}
+
+	/**
+	 * Get WordPress display name for a user, results are cached in memory.
+	 *
+	 * @param User $user User object.
+	 * @return string|null Display name (non-zero-length string) or null.
+	 */
+	public function getDisplayNameCached(User $user): ?string {
+		$id = $user->id;
+		if (!isset($this->displayNameCache[$id])) {
+			$wpUserID = static::userManagedGet($user);
+			if ($wpUserID === null) {
+				$this->displayNameCache[$id] = '';
+			}
+			else {
+				$wpUser = $this->wp->getUserBy('ID', $wpUserID);
+				$this->displayNameCache[$id] = $wpUser ?
+					$wpUser['display_name'] :
+					'';
+			}
+		}
+		$r = $this->displayNameCache[$id];
+		return $r === '' ? null : $r;
 	}
 
 	/**
