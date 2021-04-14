@@ -28,6 +28,7 @@ Also want to use the same avatars that WordPress does? Check out my [flarum-grav
 composer require AlexanderOMara/flarum-wp-users
 ```
 4.  Configure the extension with all the values it needs from the WordPress install.
+5.  Optionally enable the `WordPress` User Display Name driver under Administration to use the display names from WordPress users.
 
 
 # Notes
