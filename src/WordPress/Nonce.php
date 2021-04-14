@@ -2,6 +2,8 @@
 
 namespace AlexanderOMara\FlarumWPUsers\WordPress;
 
+use AlexanderOMara\FlarumWPUsers\WordPress\Util;
+
 /**
  * WordPress nonce class.
  */
