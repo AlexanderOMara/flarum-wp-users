@@ -34,11 +34,7 @@ class Db extends PDO {
 		string $prefix
 	) {
 		parent::__construct(
-			implode(';', [
-				"mysql:host={$host}",
-				"dbname={$name}",
-				"charset={$charset}"
-			]),
+			"mysql:host={$host};dbname={$name};charset={$charset}",
 			$user,
 			$pass,
 			[
