@@ -10,6 +10,7 @@ use Flarum\User\User;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\QueryException;
 
+use AlexanderOMara\FlarumWPUsers\WordPress\Db;
 use AlexanderOMara\FlarumWPUsers\WordPress\WordPress;
 
 /**
@@ -100,6 +101,16 @@ class Core {
 	 */
 	public function setting(string $key): ?string {
 		return $this->settings->get(static::ID . '.' . $key);
+	}
+
+	/**
+	 * Check if the display name driver is enabled.
+	 *
+	 * @return bool True if driver enabled, else false.
+	 */
+	public function displayNameDriverEnabled(): bool {
+		$activeDriver = $this->settings->get('display_name_driver');
+		return $activeDriver === static::DISPLAY_NAME_DRIVER;
 	}
 
 	/**
@@ -244,6 +255,25 @@ class Core {
 		}
 		$r = $this->displayNameCache[$id];
 		return $r === '' ? null : $r;
+	}
+
+	/**
+	 * Search for WordPress users with display name bit.
+	 *
+	 * @return array|null User ID's or null if DB not configured.
+	 */
+	public function displayNameSearch(string $bit): ?array {
+		$db = $this->wp->getDb();
+		if (!$db) {
+			return null;
+		}
+		$tbl = $db->table('users');
+		$stmt = $db->prepare(
+			"SELECT ID FROM `{$tbl}` WHERE `display_name` LIKE ?"
+		);
+		$bitEsc = $db->escLike($bit);
+		$stmt->execute(["{$bitEsc}%"]);
+		return $stmt->fetchAll(Db::FETCH_COLUMN);
 	}
 
 	/**

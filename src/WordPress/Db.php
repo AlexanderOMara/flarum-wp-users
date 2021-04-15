@@ -58,4 +58,14 @@ class Db extends PDO {
 	public function table(string $name): string {
 		return "{$this->prefix}{$name}";
 	}
+
+	/**
+	 * Escape string for a LIKE expression.
+	 *
+	 * @param string $name Table name
+	 * @return string Table name with prefix.
+	 */
+	public function escLike(string $str): string {
+		return addcslashes($str, '%_\\');
+	}
 }

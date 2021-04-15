@@ -3,8 +3,10 @@
 use Flarum\Extend;
 use Flarum\Http\Middleware as HttpMiddleware;
 use Flarum\User\Event\Saving;
+use Flarum\User\Search\UserSearcher;
 use Illuminate\Contracts\Events\Dispatcher;
 
+use AlexanderOMara\FlarumWPUsers\Compat;
 use AlexanderOMara\FlarumWPUsers\Core;
 use AlexanderOMara\FlarumWPUsers\Extenders;
 use AlexanderOMara\FlarumWPUsers\Events;
@@ -56,5 +58,7 @@ return [
 		->displayNameDriver(
 			Core::DISPLAY_NAME_DRIVER,
 			DisplayName\Driver::class
-		)
+		),
+	(new Compat\SimpleFlarumSearch(UserSearcher::class))
+		->setFullTextGambit(DisplayName\FullTextGambit::class)
 ];

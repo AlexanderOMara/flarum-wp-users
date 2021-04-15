@@ -125,6 +125,15 @@ class WordPress {
 	}
 
 	/**
+	 * Get the Db instance.
+	 *
+	 * @return Db|null The Db instance or null if not configured.
+	 */
+	public function getDb(): ?Db {
+		return $this->db;
+	}
+
+	/**
 	 * Get WordPress nonce object if configured.
 	 *
 	 * @param string|null $wpUserId WordPress user ID for the nonce.
