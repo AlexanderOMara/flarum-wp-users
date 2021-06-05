@@ -26,7 +26,7 @@ class RoutesApi extends Routes {
 	 * @param Extension|null $extension Extension object.
 	 */
 	public function extend(Container $container, Extension $extension = null) {
-		$this->remove('POST', 'forgot');
+		$this->remove('forgot');
 		$this->post(
 			'/forgot',
 			'forgot',

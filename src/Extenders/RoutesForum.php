@@ -26,7 +26,7 @@ class RoutesForum extends Routes {
 	 * @param Extension|null $extension Extension object.
 	 */
 	public function extend(Container $container, Extension $extension = null) {
-		$this->remove('POST', 'register');
+		$this->remove('register');
 		$this->post(
 			'/register',
 			'register',
