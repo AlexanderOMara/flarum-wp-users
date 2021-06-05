@@ -20,51 +20,51 @@ class WordPress {
 	/**
 	 * Logged in key.
 	 *
-	 * @var string
+	 * @var string|null
 	 */
-	protected /*string*/ $loggedInKey;
+	protected /*?string*/ $loggedInKey;
 
 	/**
 	 * Logged in salt.
 	 *
-	 * @var string
+	 * @var string|null
 	 */
-	protected /*string*/ $loggedInSalt;
+	protected /*?string*/ $loggedInSalt;
 
 	/**
 	 * Nonce key.
 	 *
 	 * @var string|null
 	 */
-	protected /*?string*/ $nonceKey = null;
+	protected /*?string*/ $nonceKey;
 
 	/**
 	 * Nonce salt.
 	 *
 	 * @var string|null
 	 */
-	protected /*?string*/ $nonceSalt = null;
+	protected /*?string*/ $nonceSalt;
 
 	/**
 	 * Cookie name.
 	 *
 	 * @var string|null
 	 */
-	protected /*?string*/ $cookieName = null;
+	protected /*?string*/ $cookieName;
 
 	/**
 	 * Login URL.
 	 *
 	 * @var string|null
 	 */
-	protected /*?string*/ $loginUrl = null;
+	protected /*?string*/ $loginUrl;
 
 	/**
 	 * Profile URL.
 	 *
 	 * @var string|null
 	 */
-	protected /*?string*/ $profileUrl = null;
+	protected /*?string*/ $profileUrl;
 
 	/**
 	 * WordPress class.
