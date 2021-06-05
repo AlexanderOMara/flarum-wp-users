@@ -20,7 +20,7 @@ class SimpleFlarumSearch extends Base {
 		$this->__searcher = $searcherClass;
 	}
 
-	public function setFullTextGambit($gambitClass) {
+	public function setFullTextGambit(string $gambitClass): self {
 		$this->__fullTextGambit = $gambitClass;
 		return parent::setFullTextGambit($gambitClass);
 	}
