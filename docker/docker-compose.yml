@@ -14,6 +14,7 @@ services:
     - ./vol/htdocs:/var/www/html
     - ..:/flarum-packages/flarum-wp-users
     environment:
+      WORDPRESS_VERSION: '5.7.2'
       WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_USER: root
       WORDPRESS_DB_PASS: toor
@@ -28,6 +29,7 @@ services:
       WORDPRESS_CFG_DEBUG_LOG: 1
       WORDPRESS_CFG_SCRIPT_DEBUG: 1
       WORDPRESS_CFG_AUTOMATIC_UPDATER_DISABLED: 1
+      FLARUM_VERSION: '1.0.0'
       FLARUM_DB_HOST: mysql
       FLARUM_DB_USER: root
       FLARUM_DB_PASS: toor

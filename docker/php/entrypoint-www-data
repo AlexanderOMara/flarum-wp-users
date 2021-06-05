@@ -3,12 +3,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-wordpress_version='5.7'
-flarum_version='v0.1.0-beta.16'
 flarum_dir='forum'
-
-export FLARUM_INSTALL_URL="${WORDPRESS_INSTALL_URL}/${flarum_dir}"
 flarum_config_json='/tmp/flarum.json'
+export FLARUM_INSTALL_URL="${WORDPRESS_INSTALL_URL}/${flarum_dir}"
 
 # Wait for and optionally create a MySQL table.
 wait_for_mysql() {
@@ -50,7 +47,7 @@ if [[ ! -f wp-load.php ]]; then
 	echo 'Downloading WordPress: Starting'
 
 	wp core download \
-		--version="${wordpress_version}"
+		--version="${WORDPRESS_VERSION}"
 
 	echo 'Downloading WordPress: Complete'
 fi
@@ -106,7 +103,7 @@ if [[ ! -d "${flarum_dir}" ]]; then
 		--stability=beta \
 		flarum/flarum \
 		"${flarum_dir}" \
-		"${flarum_version}"
+		"${FLARUM_VERSION}"
 	pushd "${flarum_dir}" > /dev/null
 	chmod +x flarum
 
