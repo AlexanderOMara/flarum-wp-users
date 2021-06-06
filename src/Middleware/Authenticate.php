@@ -3,6 +3,7 @@
 namespace AlexanderOMara\FlarumWPUsers\Middleware;
 
 use Flarum\Http\AccessToken;
+use Flarum\Http\RequestUtil;
 use Flarum\Http\SessionAuthenticator;
 use Flarum\Http\UrlGenerator;
 use Flarum\Settings\SettingsRepositoryInterface;
@@ -103,37 +104,42 @@ class Authenticate implements Middleware {
 	 * @return Response Response object.
 	 */
 	public function process(Request $request, Handler $handler): Response {
-		$actor = $request->getAttribute('actor');
-		$session = $request->getAttribute('session');
+		$actor = RequestUtil::getActor($request);
 
 		// If Flarum does not recognize user, try to authenticate here.
-		$wpActor = (!$actor || $actor->isGuest()) ?
-			$this->getActor($request) :
-			null;
+		$wpActor = $actor->isGuest() ? $this->getActor($request) : null;
 		if ($wpActor) {
-			// Set the session on the actor and replace the actor.
-			// Do not set user on the session object.
-			// That would make authentication persist in Flarum itself.
-			// Which would prevent logout when WP cookie gone.
+			// Replace the request actor with a managed user.
 			// Based on AuthenticateWithSession->process().
-			$wpActor->setSession($session);
-			$request = $request->withAttribute('actor', $wpActor);
-		}
+			$request = RequestUtil::withActor($request, $wpActor);
+			$session = $request->getAttribute('session');
 
-		// If user changes then clear session so that nothing lingers.
-		if ($session) {
-			// If not a managed user, user ID should be null.
-			$sessionUserId = $wpActor ? $wpActor->id : null;
-			if ($sessionUserId !== Core::sessionUserIdGet($session)) {
+			// Clear session if not tied to the current managed user.
+			// Run the logout and login, but with dummy access token.
+			// A real token would validate with Flarum directly.
+			// That would make authentication persist in Flarum itself.
+			// That would prevent logout when WP cookie gone.
+			if (
+				$session &&
+				Core::sessionUserIdGet($session) !== $wpActor->id
+			) {
 				$this->authenticator->logOut($session);
-				if ($sessionUserId !== null) {
-					// If a managed user, run login, but with dummy token.
-					// A real token would validate with Flarum directly.
-					// That would make authentication persist in Flarum itself.
-					// Which would prevent logout when WP cookie gone.
-					$this->authenticator->logIn($session, new AccessToken());
-				}
-				Core::sessionUserIdSet($session, $sessionUserId);
+				$this->authenticator->logIn($session, new AccessToken());
+				Core::sessionUserIdSet($session, $wpActor->id);
+			}
+		}
+		else {
+			// Actor is an unmanaged Flarum user, including guest.
+			$session = $request->getAttribute('session');
+
+			// Clear session if tied to a managed user.
+			$sessionId = $session ? Core::sessionUserIdGet($session) : null;
+			if (
+				$sessionId !== null &&
+				$sessionId !== ($actor->isGuest() ? null : $actor->id)
+			) {
+				$this->authenticator->logOut($session);
+				Core::sessionUserIdSet($session, null);
 			}
 		}
 
@@ -161,7 +167,7 @@ class Authenticate implements Middleware {
 		}
 		$this->loggedOut = null;
 
-		// If user not manager, no need to intercept.
+		// If user not managed, no need to intercept.
 		$wpUserId = Core::userManagedGet($user);
 		if ($wpUserId === null) {
 			return $response;
