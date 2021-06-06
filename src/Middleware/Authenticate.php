@@ -129,10 +129,10 @@ class Authenticate implements Middleware {
 			}
 		}
 		else {
-			// Actor is an unmanaged Flarum user, including guest.
+			// Actor is a recognized Flarum user, including guest.
 			$session = $request->getAttribute('session');
 
-			// Clear session if tied to a managed user.
+			// Clear session if tied to a different user.
 			$sessionId = $session ? Core::sessionUserIdGet($session) : null;
 			if (
 				$sessionId !== null &&
