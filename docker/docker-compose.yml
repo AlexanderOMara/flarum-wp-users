@@ -14,7 +14,7 @@ services:
     - ./vol/htdocs:/var/www/html
     - ..:/flarum-packages/flarum-wp-users
     environment:
-      WORDPRESS_VERSION: '5.7.2'
+      WORDPRESS_VERSION: '5.8'
       WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_USER: root
       WORDPRESS_DB_PASS: toor
