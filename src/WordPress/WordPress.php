@@ -338,7 +338,7 @@ class WordPress {
 		}
 
 		// Extract the cookie components.
-		$username = $elements['username'];
+		$username = str_replace('+', ' ', $elements['username'] );
 		$hmac = $elements['hmac'];
 		$token = $elements['token'];
 		$expired = $elements['expiration'];
