@@ -100,7 +100,6 @@ if [[ ! -d "${flarum_dir}" ]]; then
 
 	# Download Flarum.
 	composer create-project \
-		--stability=beta \
 		flarum/flarum \
 		"${flarum_dir}" \
 		"${FLARUM_VERSION}"
