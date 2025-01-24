@@ -62,6 +62,13 @@ class Core {
 	protected /*WordPress*/ $wp;
 
 	/**
+	 * Decode plus in cookie.
+	 *
+	 * @var bool
+	 */
+	protected /*bool*/ $decodePlus;
+
+	/**
 	 * User display name cache.
 	 *
 	 * @var array
@@ -91,6 +98,8 @@ class Core {
 			$this->setting('login_url'),
 			$this->setting('profile_url')
 		);
+
+		$this->decodePlus = (bool) $this->setting('decode_plus');
 	}
 
 	/**
@@ -120,6 +129,15 @@ class Core {
 	 */
 	public function getWP(): WordPress {
 		return $this->wp;
+	}
+
+	/**
+	 * Decode cookie as needed.
+	 *
+	 * @return bool True to decode plus in cookie.
+	 */
+	public function decodeCookie(string $cookie): string {
+		return $this->decodePlus ? str_replace('+', ' ', $cookie) : $cookie;
 	}
 
 	/**

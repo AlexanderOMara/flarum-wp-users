@@ -242,9 +242,11 @@ class Authenticate implements Middleware {
 	 */
 	protected function getCookie(Request $request): ?string {
 		$cookieName = $this->core->getWP()->getCookieName();
-		return $cookieName ?
-			($request->getCookieParams()[$cookieName] ?? null) :
-			null;
+		if (!$cookieName) {
+			return null;
+		}
+		$cookie = $request->getCookieParams()[$cookieName] ?? null;
+		return $cookie ? $this->core->decodeCookie($cookie) : null;
 	}
 
 	/**

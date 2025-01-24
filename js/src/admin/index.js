@@ -24,6 +24,13 @@ app.initializers.add(ID, app => {
 			);
 		});
 	};
+	const bool = (key, name, examples = null) => {
+		ext.registerSetting({
+			setting: `${ID}.${key}`,
+			label: <label>{name}</label>,
+			type: 'boolean'
+		});
+	};
 
 	code('login_url', 'Login URL', '.../wp-login.php');
 	code('profile_url', 'Profile URL', '.../wp-admin/profile.php');
@@ -38,4 +45,5 @@ app.initializers.add(ID, app => {
 	code('logged_in_salt', 'Logged In Salt', 'LOGGED_IN_SALT');
 	code('nonce_key', 'Nonce Key', 'NONCE_KEY');
 	code('nonce_salt', 'Nonce Salt', 'NONCE_SALT');
+	bool('decode_plus', 'Decode + in cookie (for usernames with spaces from WordPress on PHP < 8)');
 });
