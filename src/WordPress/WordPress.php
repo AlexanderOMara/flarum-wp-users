@@ -361,9 +361,17 @@ class WordPress {
 		}
 
 		// Generate the key and hash for this user and session.
+		if ( str_starts_with($user['user_pass'], '$P$' ) || str_starts_with( $user['user_pass'], '$2y$' ) ) {
+			// Retain previous behaviour of phpass or vanilla bcrypt hashed passwords.
+			$pass_frag = substr( $user['user_pass'], 8, 4 );
+		} else {
+			// Otherwise, use a substring from the end of the hash to avoid dealing with potentially long hash prefixes.
+			$pass_frag = substr( $user['user_pass'], -4 );
+		}
+
 		$key = Util::hash(implode('|', [
 			$username,
-			substr($user['user_pass'], 8, 4),
+			$pass_frag,
 			$expiration,
 			$token
 		]), $this->loggedInKey . $this->loggedInSalt);
