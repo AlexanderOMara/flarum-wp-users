@@ -360,10 +360,19 @@ class WordPress {
 			return null;
 		}
 
+		// Extract the password fragment.
+		$userPass = $user['user_pass'];
+		$passFrag = (
+			! strncmp($userPass, '$P$', 3) ||
+			! strncmp($userPass, '$2y$', 4)
+		)
+			? substr($userPass, 8, 4)
+			: substr($userPass, -4);
+
 		// Generate the key and hash for this user and session.
 		$key = Util::hash(implode('|', [
 			$username,
-			substr($user['user_pass'], 8, 4),
+			$passFrag,
 			$expiration,
 			$token
 		]), $this->loggedInKey . $this->loggedInSalt);
